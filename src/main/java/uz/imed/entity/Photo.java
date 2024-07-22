@@ -25,6 +25,8 @@ public class Photo
 
     String httpUrl;
 
+    String type;
+
     public Photo(String name, String filepath, String httpUrl)
     {
         this.name = name;
