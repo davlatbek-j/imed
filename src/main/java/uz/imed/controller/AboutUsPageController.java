@@ -4,13 +4,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import uz.imed.entity.AboutUsAdvantages;
+import uz.imed.entity.Certificates;
 import uz.imed.entity.AboutUsChooseUs;
 import uz.imed.entity.AboutUsHeader;
 import uz.imed.entity.AboutUsPartner;
-import uz.imed.payload.AboutUsMainDTO;
+import uz.imed.payload.AboutUsChooseUsDTO;
+import uz.imed.payload.AboutUsHeaderDTO;
 import uz.imed.payload.ApiResponse;
-import uz.imed.service.AboutUsAdvantagesService;
 import uz.imed.service.AboutUsChooseUsService;
 import uz.imed.service.AboutUsHeaderService;
 import uz.imed.service.AboutUsPartnerService;
@@ -24,36 +24,43 @@ public class AboutUsPageController {
 
     private final AboutUsHeaderService aboutUsHeaderService;
 
-    private final AboutUsPartnerService aboutUsPartnerTaskService;
+    private final AboutUsPartnerService aboutUsPartnerService;
 
     private final AboutUsChooseUsService aboutUsChooseUsService;
 
-    private final AboutUsAdvantagesService aboutUsAdvantagesService;
 
-    @GetMapping("/get")
-    public ResponseEntity<ApiResponse<AboutUsMainDTO>> findMainAbout() {
-        return aboutUsHeaderService.findForMainPage();
-    }
+
+
 
     @PostMapping("/header/create")
     public ResponseEntity<ApiResponse<AboutUsHeader>> createAboutUsHeader(
-            @RequestParam(value = "json") String aboutUsHeader,
-            @RequestPart(value = "photos") MultipartFile photo
+            @RequestBody AboutUsHeader aboutUsHeader,
+            @RequestPart(value = "photo") MultipartFile photo
     ) {
         return aboutUsHeaderService.create(aboutUsHeader, photo);
     }
 
-    @GetMapping("/header/get")
-    public ResponseEntity<ApiResponse<AboutUsHeader>> findAboutUsHeader() {
-        return aboutUsHeaderService.find();
+    @GetMapping("/header/get-all")
+    public ResponseEntity<ApiResponse<List<AboutUsHeaderDTO>>> findAllAboutUsHeader(
+            @RequestHeader(value = "Accept-Language", defaultValue = "ru") String lang) {
+        return aboutUsHeaderService.findAll(lang);
+    }
+
+    @GetMapping("/header/get-by-id/{id}")
+    public ResponseEntity<ApiResponse<AboutUsHeaderDTO>> findAboutUsHeaderById(
+            @PathVariable Long id,
+            @RequestHeader(value = "Accept-Language", defaultValue = "ru") String lang) {
+        return aboutUsHeaderService.getById(id,lang);
     }
 
     @PutMapping("/header/update")
     public ResponseEntity<ApiResponse<AboutUsHeader>> updateAboutUsHeader(
-            @RequestBody AboutUsHeader aboutUsHeader
+            @RequestParam Long id,
+            @RequestBody AboutUsHeader aboutUsHeader,
+            @RequestParam(name = "photo") MultipartFile file
 
     ) {
-        return aboutUsHeaderService.update(aboutUsHeader);
+        return aboutUsHeaderService.update(id,aboutUsHeader,file);
     }
 
     @DeleteMapping("/header/delete")
@@ -63,45 +70,45 @@ public class AboutUsPageController {
 
     @PostMapping("/partner-service/create")
     public ResponseEntity<ApiResponse<AboutUsPartner>> createPartnerService(
-            @RequestParam(value = "json") String partnerTask,
+            @RequestBody AboutUsPartner partner,
             @RequestPart(value = "photo") MultipartFile photo
     ) {
-        return aboutUsPartnerTaskService.create(partnerTask, photo);
+        return aboutUsPartnerService.create(partner, photo);
     }
 
     @GetMapping("/partner-service/get/{id}")
-    public ResponseEntity<ApiResponse<AboutUsPartner>> findByIdPartnerTask(
+    public ResponseEntity<ApiResponse<AboutUsPartner>> findByIdPartner(
             @PathVariable Long id
     ) {
-        return aboutUsPartnerTaskService.findById(id);
+        return aboutUsPartnerService.findById(id);
     }
 
     @GetMapping("/partner-service/get-all")
     public ResponseEntity<ApiResponse<List<AboutUsPartner>>> findAllPartnerTask() {
-        return aboutUsPartnerTaskService.findAll();
+        return aboutUsPartnerService.findAll();
     }
 
     @PutMapping("/partner-service/update/{id}")
     public ResponseEntity<ApiResponse<AboutUsPartner>> updatePartnerTask(
             @PathVariable Long id,
-            @RequestParam(value = "json") String partnerTask,
+            @RequestBody AboutUsPartner partner,
             @RequestPart(value = "photo") MultipartFile photo
     ) {
-        return aboutUsPartnerTaskService.update(id, partnerTask, photo);
+        return aboutUsPartnerService.update(id, partner, photo);
     }
 
     @PutMapping("/partner-service/change-active/{id}")
     public ResponseEntity<ApiResponse<?>> changeActivePartnerTask(
             @PathVariable Long id
     ) {
-        return aboutUsPartnerTaskService.changeActive(id);
+        return aboutUsPartnerService.changeActive(id);
     }
 
     @DeleteMapping("/partner-service/delete/{id}")
     public ResponseEntity<ApiResponse<?>> deletePartnerTask(
             @PathVariable Long id
     ) {
-        return aboutUsPartnerTaskService.delete(id);
+        return aboutUsPartnerService.delete(id);
     }
 
     @PostMapping("/choose-us/create")
@@ -112,15 +119,18 @@ public class AboutUsPageController {
     }
 
     @GetMapping("/choose-us/get/{id}")
-    public ResponseEntity<ApiResponse<AboutUsChooseUs>> getByIdChooseUs(
-            @PathVariable Long id
+    public ResponseEntity<ApiResponse<AboutUsChooseUsDTO>> getByIdChooseUs(
+            @PathVariable Long id,
+            @RequestHeader(value = "Accept-Language", defaultValue = "ru") String lang
     ) {
-        return aboutUsChooseUsService.findById(id);
+        return aboutUsChooseUsService.getById(id,lang);
     }
 
     @GetMapping("/choose-us/get-all")
-    public ResponseEntity<ApiResponse<List<AboutUsChooseUs>>> findAllChooseUs() {
-        return aboutUsChooseUsService.findAll();
+    public ResponseEntity<ApiResponse<List<AboutUsChooseUsDTO>>> findAllChooseUs(
+            @RequestHeader(value = "Accept-Language", defaultValue = "ru") String lang
+    ) {
+        return aboutUsChooseUsService.findAll(lang);
     }
 
     @PutMapping("/choose-us/update/{id}")
@@ -138,38 +148,4 @@ public class AboutUsPageController {
         return aboutUsChooseUsService.delete(id);
     }
 
-
-    @PostMapping("/advantages/create")
-    public ResponseEntity<ApiResponse<AboutUsAdvantages>> createAdvantages(
-            @RequestParam MultipartFile file
-    ) {
-        return aboutUsAdvantagesService.create(file);
-    }
-
-    @GetMapping("/advantages/get/{id}")
-    public ResponseEntity<ApiResponse<AboutUsAdvantages>> getByIdAdvantages(
-            @PathVariable Long id
-    ) {
-        return aboutUsAdvantagesService.findById(id);
-    }
-
-    @GetMapping("/advantages/get-all")
-    public ResponseEntity<ApiResponse<List<AboutUsAdvantages>>> findAllAdvantages() {
-        return aboutUsAdvantagesService.findAll();
-    }
-
-    @PutMapping("/advantages/update/{id}")
-    public ResponseEntity<ApiResponse<AboutUsAdvantages>> update(
-            @PathVariable Long id,
-            @RequestParam MultipartFile file
-    ) {
-        return aboutUsAdvantagesService.update(id, file);
-    }
-
-    @DeleteMapping("/advantages/delete/{id}")
-    public ResponseEntity<ApiResponse<?>> deleteAdvantages(
-            @PathVariable Long id
-    ) {
-        return aboutUsAdvantagesService.delete(id);
-    }
 }

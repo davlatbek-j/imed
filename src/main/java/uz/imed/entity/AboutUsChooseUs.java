@@ -15,8 +15,16 @@ import lombok.experimental.FieldDefaults;
 @Entity(name = "about_us_choose_us")
 public class AboutUsChooseUs extends BaseEntity {
 
-    String name;
+    String nameUz;
 
-    String description;
+    String nameRu;
+
+    String nameEng;
+
+    String descriptionUz;
+
+    String descriptionRu;
+
+    String descriptionEng;
 
 }

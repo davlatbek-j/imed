@@ -4,9 +4,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import uz.imed.entity.AboutUsHeader;
 import uz.imed.entity.AboutUsPartner;
 import uz.imed.entity.Photo;
 import uz.imed.payload.ApiResponse;
@@ -28,20 +30,17 @@ public class AboutUsPartnerService {
 
     private final PhotoService photoService;
 
-    public ResponseEntity<ApiResponse<AboutUsPartner>> create(String json, MultipartFile photoFile) {
+    public ResponseEntity<ApiResponse<AboutUsPartner>> create(AboutUsPartner entity, MultipartFile photoFile) {
         ApiResponse<AboutUsPartner> response = new ApiResponse<>();
-        try {
-            AboutUsPartner aboutUsPartnerTask = objectMapper.readValue(json, AboutUsPartner.class);
-            Photo photo = photoService.save(photoFile);
-            aboutUsPartnerTask.setIconUrl(photo.getHttpUrl());
-            aboutUsPartnerTask.setActive(true);
-            AboutUsPartner save = aboutUsPartnerRepository.save(aboutUsPartnerTask);
-            response.setData(save);
-            return ResponseEntity.status(201).body(response);
-        } catch (JsonProcessingException e) {
-            response.setMessage(e.getMessage());
-            return ResponseEntity.status(409).body(response);
-        }
+
+        AboutUsPartner aboutUspartner = new AboutUsPartner();
+        aboutUspartner.setIcon(photoService.save(photoFile));
+        aboutUspartner.setName(entity.getName());
+        aboutUspartner.setActive(entity.isActive());
+        AboutUsPartner saved = aboutUsPartnerRepository.save(aboutUspartner);
+        response.setMessage("Successfully created");
+        response.setData(saved);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     public ResponseEntity<ApiResponse<AboutUsPartner>> findById(Long id) {
@@ -66,40 +65,27 @@ public class AboutUsPartnerService {
         return ResponseEntity.status(200).body(response);
     }
 
-    public ResponseEntity<ApiResponse<AboutUsPartner>> update(Long id, String newJson, MultipartFile newPhoto) {
+    public ResponseEntity<ApiResponse<AboutUsPartner>> update(Long id, AboutUsPartner entity, MultipartFile newPhoto) {
+        AboutUsPartner aboutUsPartner = aboutUsPartnerRepository.findById(id).get();
         ApiResponse<AboutUsPartner> response = new ApiResponse<>();
-        Optional<AboutUsPartner> optionalAboutUsPartnerTask = aboutUsPartnerRepository.findById(id);
-        if (optionalAboutUsPartnerTask.isEmpty()) {
+
+        if (aboutUsPartner == null) {
             response.setMessage("AboutUsPartnerTask is not found by id: " + id);
             return ResponseEntity.status(404).body(response);
         }
-        String oldPhotoUrl = aboutUsPartnerRepository.findPhotoUrlById(id);
-        boolean active = optionalAboutUsPartnerTask.get().isActive();
+
         AboutUsPartner newAboutUsPartnerTask = new AboutUsPartner();
-
-        try {
-            if (newJson != null) {
-                newAboutUsPartnerTask = objectMapper.readValue(newJson, AboutUsPartner.class);
-                if (newPhoto == null || !(newPhoto.getSize() > 0)) {
-                    newAboutUsPartnerTask.setIconUrl(oldPhotoUrl);
-                }
-                newAboutUsPartnerTask.setId(id);
-                newAboutUsPartnerTask.setActive(active);
-            } else {
-                newAboutUsPartnerTask = aboutUsPartnerRepository.findById(id).get();
-            }
-
-            if (newPhoto != null && newPhoto.getSize() > 0) {
-                Photo photo = photoService.save(newPhoto);
-                newAboutUsPartnerTask.setIconUrl(photo.getHttpUrl());
-            }
-            AboutUsPartner save = aboutUsPartnerRepository.save(newAboutUsPartnerTask);
-            response.setData(save);
-            return ResponseEntity.status(201).body(response);
-        } catch (JsonProcessingException e) {
-            response.setMessage(e.getMessage());
-            return ResponseEntity.status(404).body(response);
+        if (entity.getName() != null || !entity.getName().isEmpty()) {
+            aboutUsPartner.setName(entity.getName());
         }
+        if (newPhoto != null && newPhoto.getSize() > 0) {
+            Photo photo = photoService.save(newPhoto);
+            newAboutUsPartnerTask.setIcon(photo);
+        }
+        AboutUsPartner save = aboutUsPartnerRepository.save(newAboutUsPartnerTask);
+        response.setData(save);
+        return ResponseEntity.status(201).body(response);
+
     }
 
     public ResponseEntity<ApiResponse<?>> delete(Long id) {

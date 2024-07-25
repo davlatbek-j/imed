@@ -21,11 +21,23 @@ public class AboutUsHeader extends BaseEntity{
 
     String formName;
 
-    String title;
+    String titleUz;
 
-    String subtitle;
+    String titleRu;
 
-    String description;
+    String titleEng;
+
+    String subtitleUz;
+
+    String subtitleRu;
+
+    String subtitleEng;
+
+    String descriptionUz;
+
+    String descriptionRu;
+
+    String descriptionEng;
 
     @OneToOne
     Photo photo;

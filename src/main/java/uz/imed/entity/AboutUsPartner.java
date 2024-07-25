@@ -2,6 +2,7 @@ package uz.imed.entity;
 
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.OneToOne;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,7 +18,8 @@ public class AboutUsPartner extends BaseEntity{
 
     String name;
 
-    String iconUrl;
+    @OneToOne
+    Photo icon;
 
     boolean active;
 

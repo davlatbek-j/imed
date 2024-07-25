@@ -1,9 +1,11 @@
 package uz.imed.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import uz.imed.entity.AboutUsChooseUs;
+import uz.imed.payload.AboutUsChooseUsDTO;
 import uz.imed.payload.ApiResponse;
 import uz.imed.repository.AboutUsChooseUsRepository;
 
@@ -20,46 +22,77 @@ public class AboutUsChooseUsService {
 
     public ResponseEntity<ApiResponse<AboutUsChooseUs>> create(AboutUsChooseUs aboutUsChooseUs) {
         ApiResponse<AboutUsChooseUs> response = new ApiResponse<>();
-        AboutUsChooseUs save = aboutUsChooseUsRepository.save(aboutUsChooseUs);
-        response.setData(save);
-        return ResponseEntity.status(200).body(response);
+        AboutUsChooseUs article = new AboutUsChooseUs();
+        article.setNameUz(aboutUsChooseUs.getNameUz());
+        article.setNameRu(aboutUsChooseUs.getNameRu());
+        article.setNameEng(aboutUsChooseUs.getNameEng());
+        article.setDescriptionUz(aboutUsChooseUs.getDescriptionUz());
+        article.setDescriptionRu(aboutUsChooseUs.getDescriptionRu());
+        article.setDescriptionEng(aboutUsChooseUs.getDescriptionEng());
+
+
+        AboutUsChooseUs saved = aboutUsChooseUsRepository.save(article);
+        response.setMessage("Successfully created");
+        response.setData(saved);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    public ResponseEntity<ApiResponse<AboutUsChooseUs>> findById(Long id) {
-        ApiResponse<AboutUsChooseUs> response = new ApiResponse<>();
-        Optional<AboutUsChooseUs> optionalAboutUsChooseUs = aboutUsChooseUsRepository.findById(id);
-        if (optionalAboutUsChooseUs.isEmpty()) {
-            response.setMessage("AboutUsChooseUs is not found by id");
-            return ResponseEntity.status(404).body(response);
+    public ResponseEntity<ApiResponse<AboutUsChooseUsDTO>> getById(Long id, String lang) {
+        ApiResponse<AboutUsChooseUsDTO> response = new ApiResponse<>();
+        if (!aboutUsChooseUsRepository.existsById(id)) {
+            response.setMessage("Article with id " + id + " does not exist");
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }
-        AboutUsChooseUs aboutUsChooseUs = optionalAboutUsChooseUs.get();
-        response.setData(aboutUsChooseUs);
-        response.setMessage("Found");
-        return ResponseEntity.status(200).body(response);
+        AboutUsChooseUs aboutUsChooseUs = aboutUsChooseUsRepository.findById(id).get();
+        response.setMessage("Found article with id " + id);
+
+        response.setData(new AboutUsChooseUsDTO(aboutUsChooseUs, lang));
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    public ResponseEntity<ApiResponse<List<AboutUsChooseUs>>> findAll() {
-        ApiResponse<List<AboutUsChooseUs>> response = new ApiResponse<>();
+    public ResponseEntity<ApiResponse<List<AboutUsChooseUsDTO>>> findAll(String lang) {
+        ApiResponse<List<AboutUsChooseUsDTO>> response = new ApiResponse<>();
+        List<AboutUsChooseUs> articles = aboutUsChooseUsRepository.findAll();
+        response.setMessage("Found " + articles.size() + " article(s)");
         response.setData(new ArrayList<>());
-        List<AboutUsChooseUs> all = aboutUsChooseUsRepository.findAll();
-        all.forEach(aboutUsChooseUs -> response.getData().add(aboutUsChooseUs));
-        response.setMessage("Found " + all.size() + " AboutUsChooseUs");
-        return ResponseEntity.status(200).body(response);
+        articles.forEach(i -> response.getData().add(new AboutUsChooseUsDTO(i, lang)));
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    public ResponseEntity<ApiResponse<AboutUsChooseUs>> update(Long id, AboutUsChooseUs aboutUsChooseUs) {
+    public ResponseEntity<ApiResponse<AboutUsChooseUs>> update(Long id, AboutUsChooseUs entity) {
         ApiResponse<AboutUsChooseUs> response = new ApiResponse<>();
-        Optional<AboutUsChooseUs> optionalAboutUsChooseUs = aboutUsChooseUsRepository.findById(id);
-        if (optionalAboutUsChooseUs.isEmpty()) {
-            response.setMessage("AboutUsChooseUs is not found by id");
-            return ResponseEntity.status(404).body(response);
+        if (!aboutUsChooseUsRepository.existsById(id)) {
+            response.setMessage("Article with id " + id + " does not exist");
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }
-        AboutUsChooseUs oldAboutUsChooseUs = optionalAboutUsChooseUs.get();
-        oldAboutUsChooseUs.setName(aboutUsChooseUs.getName());
-        oldAboutUsChooseUs.setDescription(aboutUsChooseUs.getDescription());
-        AboutUsChooseUs save = aboutUsChooseUsRepository.save(oldAboutUsChooseUs);
+
+        AboutUsChooseUs newEntity = aboutUsChooseUsRepository.findById(id).get();
+
+        if (entity.getNameUz() != null || !entity.getNameUz().isEmpty()) {
+            newEntity.setNameUz(entity.getNameUz());
+        }
+        if (entity.getNameRu() != null || !entity.getNameRu().isEmpty()) {
+            newEntity.setNameRu(entity.getNameRu());
+        }
+        if (entity.getNameEng() != null || !entity.getNameEng().isEmpty()) {
+            newEntity.setNameEng(entity.getNameEng());
+        }
+        if (entity.getDescriptionUz() != null || !entity.getDescriptionUz().isEmpty()) {
+            newEntity.setDescriptionUz(entity.getDescriptionUz());
+        }
+        if (entity.getDescriptionRu() != null || !entity.getDescriptionRu().isEmpty()) {
+            newEntity.setDescriptionRu(entity.getDescriptionRu());
+        }
+
+
+        newEntity.setId(id);
+        AboutUsChooseUs save = aboutUsChooseUsRepository.save(newEntity);
+
+        response.setMessage("Successfully updated");
         response.setData(save);
-        return ResponseEntity.status(200).body(response);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+
     }
 
     public ResponseEntity<ApiResponse<?>> delete(Long id) {
