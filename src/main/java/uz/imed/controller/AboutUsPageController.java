@@ -4,13 +4,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import uz.imed.entity.Certificates;
+import uz.imed.entity.AboutUsCertificates;
 import uz.imed.entity.AboutUsChooseUs;
 import uz.imed.entity.AboutUsHeader;
 import uz.imed.entity.AboutUsPartner;
 import uz.imed.payload.AboutUsChooseUsDTO;
 import uz.imed.payload.AboutUsHeaderDTO;
 import uz.imed.payload.ApiResponse;
+import uz.imed.service.AboutUsCertificaresService;
 import uz.imed.service.AboutUsChooseUsService;
 import uz.imed.service.AboutUsHeaderService;
 import uz.imed.service.AboutUsPartnerService;
@@ -27,6 +28,8 @@ public class AboutUsPageController {
     private final AboutUsPartnerService aboutUsPartnerService;
 
     private final AboutUsChooseUsService aboutUsChooseUsService;
+
+    private final AboutUsCertificaresService aboutUsCertificaresService;
 
 
 
@@ -148,4 +151,30 @@ public class AboutUsPageController {
         return aboutUsChooseUsService.delete(id);
     }
 
+    @PostMapping("/create/us-certificate")
+    public ResponseEntity<ApiResponse<AboutUsCertificates>> create(
+            @RequestParam(name = "photo") MultipartFile file
+    ){
+        return aboutUsCertificaresService.create(file);
+    }
+
+    @GetMapping("/get-all")
+    public ResponseEntity<ApiResponse<List<AboutUsCertificates>>> getAll(){
+       return aboutUsCertificaresService.findAll();
+    }
+
+    @GetMapping("/get/{id}")
+    public ResponseEntity<ApiResponse<AboutUsCertificates>> getById(
+            @PathVariable Long id
+    ){
+        return aboutUsCertificaresService.findById(id);
+    }
+
+    @PutMapping("/update/{id}")
+    private ResponseEntity<ApiResponse<AboutUsCertificates>> update(
+            @PathVariable Long id,
+            @RequestParam MultipartFile photo
+    ){
+        return aboutUsCertificaresService.update(id,photo);
+    }
 }
