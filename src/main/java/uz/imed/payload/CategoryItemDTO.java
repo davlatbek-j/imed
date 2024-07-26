@@ -16,6 +16,9 @@ import java.util.List;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CategoryItemDTO {
+
+    Long id;
+
     String title;
 
     String slug;
@@ -28,6 +31,7 @@ public class CategoryItemDTO {
     Integer orderNum;
 
     public CategoryItemDTO(CategoryItem categoryItem,String lang){
+        this.id=categoryItem.getId();
         this.slug= categoryItem.getSlug();
         this.photoDTO=new PhotoDTO(categoryItem.getPhoto());
         this.catalogDTOS=new ArrayList<>();
