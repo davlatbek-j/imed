@@ -7,7 +7,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import uz.imed.entity.BaseEntity;
 
 import java.util.List;
 
@@ -18,19 +17,15 @@ import java.util.List;
 @Entity(name = "catalog")
 public class Catalog extends BaseEntity {
 
-    String name;
+    String nameUz;
 
-    @Column(unique = true)
-    String slug;
+    String nameRu;
 
-    boolean active;
+    String nameEng;
 
-    @ManyToOne
-    @JsonIgnore
-    EquipmentCategory category;
-
-    @OneToMany(mappedBy = "catalog", cascade = CascadeType.ALL)
-    @JsonIgnore
-    List<Product> productList;
+    public Catalog(Long id)
+    {
+        super(id);
+    }
 
 }

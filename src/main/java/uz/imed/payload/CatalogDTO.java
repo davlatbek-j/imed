@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import uz.imed.entity.Catalog;
+import uz.imed.exeptions.LanguageNotSupportException;
 
 
 @Data
@@ -19,17 +20,27 @@ public class CatalogDTO {
 
     String name;
 
-    String slug;
 
-    boolean active;
 
-    String category;
-
-    public CatalogDTO(Catalog catalog){
-        this.name=catalog.getName();
-        this.slug=catalog.getSlug();
-        this.active=catalog.isActive();
-        this.category=catalog.getCategory().getName();
+    public CatalogDTO(Catalog catalog, String lang){
+        switch (lang.toLowerCase()){
+            case "uz":
+            {
+                this.name= catalog.getNameUz();
+            }
+            case "ru":
+            {
+                this.name= catalog.getNameRu();
+            }
+            case "eng":
+            {
+                this.name= catalog.getNameEng();
+            }
+            default:
+            {
+                throw new LanguageNotSupportException("Language not supported: " + lang);
+            }
+        }
     }
 
 }

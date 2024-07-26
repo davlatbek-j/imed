@@ -52,10 +52,10 @@ public class AboutUsChooseUsService {
 
     public ResponseEntity<ApiResponse<List<AboutUsChooseUsDTO>>> findAll(String lang) {
         ApiResponse<List<AboutUsChooseUsDTO>> response = new ApiResponse<>();
-        List<AboutUsChooseUs> articles = aboutUsChooseUsRepository.findAll();
-        response.setMessage("Found " + articles.size() + " article(s)");
+        List<AboutUsChooseUs> all = aboutUsChooseUsRepository.findAll();
+        response.setMessage("Found " + all.size() + " data");
         response.setData(new ArrayList<>());
-        articles.forEach(i -> response.getData().add(new AboutUsChooseUsDTO(i, lang)));
+        all.forEach(i -> response.getData().add(new AboutUsChooseUsDTO(i, lang)));
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -63,7 +63,7 @@ public class AboutUsChooseUsService {
     public ResponseEntity<ApiResponse<AboutUsChooseUs>> update(Long id, AboutUsChooseUs entity) {
         ApiResponse<AboutUsChooseUs> response = new ApiResponse<>();
         if (!aboutUsChooseUsRepository.existsById(id)) {
-            response.setMessage("Article with id " + id + " does not exist");
+            response.setMessage("Data with id " + id + " does not exist");
             return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }
 
