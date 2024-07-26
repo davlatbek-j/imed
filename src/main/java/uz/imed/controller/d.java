@@ -1,3 +1,6 @@
+/*
+package uz.imed.controller;
+
 package uz.imed.controller;
 
 import lombok.RequiredArgsConstructor;
@@ -72,3 +75,4 @@ public class CatalogController {
     }
 
 }
+*/

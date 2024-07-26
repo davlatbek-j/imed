@@ -1,3 +1,4 @@
+/*
 package uz.imed.controller;
 
 import lombok.RequiredArgsConstructor;
@@ -72,4 +73,4 @@ public class EquipmentCategoryController {
         return productService.findAllByCategorySlug(slug);
     }
 
-}
+}*/

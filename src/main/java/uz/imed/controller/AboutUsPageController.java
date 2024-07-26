@@ -160,7 +160,7 @@ public class AboutUsPageController {
 
     @GetMapping("/get-all")
     public ResponseEntity<ApiResponse<List<AboutUsCertificates>>> getAll(){
-       return aboutUsCertificaresService.findAll();
+        return aboutUsCertificaresService.findAll();
     }
 
     @GetMapping("/get/{id}")

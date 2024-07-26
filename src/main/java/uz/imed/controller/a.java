@@ -1,3 +1,4 @@
+/*
 package uz.imed.controller;
 
 import lombok.RequiredArgsConstructor;
@@ -8,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import uz.imed.entity.Product;
 import uz.imed.payload.ApiResponse;
-import uz.imed.payload.ProductForListDTO;
+
 import uz.imed.service.ProductService;
 
 import java.util.List;
@@ -76,4 +77,4 @@ public class ProductController {
         return productService.delete(id);
     }
 
-}
+}*/
