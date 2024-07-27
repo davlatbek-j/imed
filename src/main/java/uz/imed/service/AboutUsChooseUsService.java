@@ -69,19 +69,19 @@ public class AboutUsChooseUsService {
 
         AboutUsChooseUs newEntity = aboutUsChooseUsRepository.findById(id).get();
 
-        if (entity.getNameUz() != null || !entity.getNameUz().isEmpty()) {
+        if (entity.getNameUz() != null ) {
             newEntity.setNameUz(entity.getNameUz());
         }
-        if (entity.getNameRu() != null || !entity.getNameRu().isEmpty()) {
+        if (entity.getNameRu() != null ) {
             newEntity.setNameRu(entity.getNameRu());
         }
-        if (entity.getNameEng() != null || !entity.getNameEng().isEmpty()) {
+        if (entity.getNameEng() != null ) {
             newEntity.setNameEng(entity.getNameEng());
         }
-        if (entity.getDescriptionUz() != null || !entity.getDescriptionUz().isEmpty()) {
+        if (entity.getDescriptionUz() != null ) {
             newEntity.setDescriptionUz(entity.getDescriptionUz());
         }
-        if (entity.getDescriptionRu() != null || !entity.getDescriptionRu().isEmpty()) {
+        if (entity.getDescriptionRu() != null ) {
             newEntity.setDescriptionRu(entity.getDescriptionRu());
         }
 

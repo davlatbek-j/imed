@@ -14,7 +14,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class AboutUsCertificaresService {
+public class AboutUsCertificatesService {
     private final AboutUsCertificatesRepository aboutUsCertificatesRepository;
     private final PhotoService photoService;
 
@@ -25,6 +25,7 @@ public class AboutUsCertificaresService {
 
         AboutUsCertificates save = aboutUsCertificatesRepository.save(aBoutUsCertificates);
         response.setData(save);
+        response.setMessage("Successfully created");
         return ResponseEntity.status(200).body(response);
     }
 
@@ -32,7 +33,7 @@ public class AboutUsCertificaresService {
         ApiResponse<AboutUsCertificates> response = new ApiResponse<>();
         Optional<AboutUsCertificates> optionalAboutUsAdvantages = aboutUsCertificatesRepository.findById(id);
         if (optionalAboutUsAdvantages.isEmpty()) {
-            response.setMessage("AboutUsChooseUs is not found by id");
+            response.setMessage("Certificate is not found by id");
             return ResponseEntity.status(404).body(response);
         }
         AboutUsCertificates aBoutUsCertificates = optionalAboutUsAdvantages.get();
@@ -46,7 +47,7 @@ public class AboutUsCertificaresService {
         response.setData(new ArrayList<>());
         List<AboutUsCertificates> all = aboutUsCertificatesRepository.findAll();
         all.forEach(aboutUsChooseUs -> response.getData().add(aboutUsChooseUs));
-        response.setMessage("Found " + all.size() + " AboutUsChooseUs");
+        response.setMessage("Found " + all.size() + " certificate(s)");
         return ResponseEntity.status(200).body(response);
     }
 
@@ -70,6 +71,7 @@ public class AboutUsCertificaresService {
 
         AboutUsCertificates save = aboutUsCertificatesRepository.save(newAboutUsCertificates);
         response.setData(save);
+        response.setMessage("Certificate succesfully updates");
             return ResponseEntity.status(201).body(response);
 
     }

@@ -26,18 +26,37 @@ public class AboutUsPartnerService {
 
     private final AboutUsPartnerRepository aboutUsPartnerRepository;
 
-    private final ObjectMapper objectMapper;
-
     private final PhotoService photoService;
 
-    public ResponseEntity<ApiResponse<AboutUsPartner>> create(AboutUsPartner entity, MultipartFile photoFile) {
+    public ResponseEntity<ApiResponse<AboutUsPartner>> create(AboutUsPartner entity) {
         ApiResponse<AboutUsPartner> response = new ApiResponse<>();
 
         AboutUsPartner aboutUspartner = new AboutUsPartner();
-        aboutUspartner.setIcon(photoService.save(photoFile));
         aboutUspartner.setName(entity.getName());
         aboutUspartner.setActive(entity.isActive());
         AboutUsPartner saved = aboutUsPartnerRepository.save(aboutUspartner);
+        response.setMessage("Successfully created");
+        response.setData(saved);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    public ResponseEntity<ApiResponse<AboutUsPartner>> uploadImage(Long id, MultipartFile photoFile){
+        ApiResponse<AboutUsPartner> response = new ApiResponse<>();
+
+        if (!(photoFile.getContentType().equals("image/png") ||
+                photoFile.getContentType().equals("image/svg+xml"))) {
+            response.setMessage("Invalid file , only image/png or image/svg+xml");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        if (!aboutUsPartnerRepository.existsById(id)) {
+            response.setMessage("Data with id " + id + " does not exist");
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        }
+        AboutUsPartner aboutUsPartner = aboutUsPartnerRepository.findById(id).get();
+        response.setMessage("Found data with id " + id);
+        aboutUsPartner.setIcon(photoService.save(photoFile));
+        AboutUsPartner saved = aboutUsPartnerRepository.save(aboutUsPartner);
         response.setMessage("Successfully created");
         response.setData(saved);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
@@ -65,27 +84,47 @@ public class AboutUsPartnerService {
         return ResponseEntity.status(200).body(response);
     }
 
-    public ResponseEntity<ApiResponse<AboutUsPartner>> update(Long id, AboutUsPartner entity, MultipartFile newPhoto) {
-        AboutUsPartner aboutUsPartner = aboutUsPartnerRepository.findById(id).get();
+    public ResponseEntity<ApiResponse<AboutUsPartner>> update(Long id, AboutUsPartner entity) {
         ApiResponse<AboutUsPartner> response = new ApiResponse<>();
-
-        if (aboutUsPartner == null) {
-            response.setMessage("AboutUsPartnerTask is not found by id: " + id);
+        Optional<AboutUsPartner> optionalAboutUsPartner = aboutUsPartnerRepository.findAll().stream().findFirst();
+        if (optionalAboutUsPartner.isEmpty()) {
+            response.setMessage("AboutUsHeader is not found");
             return ResponseEntity.status(404).body(response);
         }
+        AboutUsPartner newentity = aboutUsPartnerRepository.findById(id).get();
 
-        AboutUsPartner newAboutUsPartnerTask = new AboutUsPartner();
-        if (entity.getName() != null || !entity.getName().isEmpty()) {
-            aboutUsPartner.setName(entity.getName());
+        if (entity.getName() != null ) {
+            newentity.setName(entity.getName());
         }
-        if (newPhoto != null && newPhoto.getSize() > 0) {
-            Photo photo = photoService.save(newPhoto);
-            newAboutUsPartnerTask.setIcon(photo);
-        }
-        AboutUsPartner save = aboutUsPartnerRepository.save(newAboutUsPartnerTask);
+        newentity.setId(id);
+        AboutUsPartner save = aboutUsPartnerRepository.save(newentity);
+
+        response.setMessage("Successfully updated");
         response.setData(save);
-        return ResponseEntity.status(201).body(response);
+        return new ResponseEntity<>(response, HttpStatus.OK);
 
+    }
+
+    public ResponseEntity<ApiResponse<AboutUsPartner>> updateIcon(Long id,MultipartFile icon){
+        ApiResponse<AboutUsPartner> response = new ApiResponse<>();
+
+        if (!(icon.getContentType().equals("image/png") ||
+                icon.getContentType().equals("image/svg+xml"))) {
+            response.setMessage("Invalid file , only image/png or image/svg+xml");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        if (!aboutUsPartnerRepository.existsById(id)) {
+            response.setMessage("Data with id " + id + " does not exist");
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        }
+        AboutUsPartner aboutUsPartner = aboutUsPartnerRepository.findById(id).get();
+        response.setMessage("Found data with id " + id);
+        aboutUsPartner.setIcon(photoService.save(icon));
+        AboutUsPartner saved = aboutUsPartnerRepository.save(aboutUsPartner);
+        response.setMessage("Successfully created");
+        response.setData(saved);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     public ResponseEntity<ApiResponse<?>> delete(Long id) {

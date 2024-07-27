@@ -24,38 +24,60 @@ public class AboutUsHeaderService {
 
     private final AboutUsHeaderRepository aboutUsHeaderRepository;
 
-    private final ObjectMapper objectMapper;
 
     private final PhotoService photoService;
 
-    public ResponseEntity<ApiResponse<AboutUsHeader>> create(AboutUsHeader entity, MultipartFile photoFile) {
+    public ResponseEntity<ApiResponse<AboutUsHeader>> create(AboutUsHeader entity) {
         ApiResponse<AboutUsHeader> response = new ApiResponse<>();
-       AboutUsHeader aboutUsHeader=new AboutUsHeader();
-       aboutUsHeader.setPhoto(photoService.save(photoFile));
-       aboutUsHeader.setFormName(entity.getFormName());
-       aboutUsHeader.setTitleUz(entity.getTitleUz());
-       aboutUsHeader.setTitleRu(entity.getTitleRu());
-       aboutUsHeader.setTitleEng(entity.getTitleEng());
-       aboutUsHeader.setSubtitleUz(entity.getSubtitleUz());
-       aboutUsHeader.setSubtitleRu(entity.getSubtitleRu());
-       aboutUsHeader.setSubtitleEng(entity.getSubtitleEng());
-       aboutUsHeader.setDescriptionUz(entity.getDescriptionUz());
-       aboutUsHeader.setDescriptionRu(entity.getDescriptionRu());
-       aboutUsHeader.setDescriptionEng(entity.getDescriptionEng());
+        AboutUsHeader aboutUsHeader = new AboutUsHeader();
+
+        aboutUsHeader.setFormName(entity.getFormName());
+        aboutUsHeader.setTitleUz(entity.getTitleUz());
+        aboutUsHeader.setTitleRu(entity.getTitleRu());
+        aboutUsHeader.setTitleEng(entity.getTitleEng());
+        aboutUsHeader.setSubtitleUz(entity.getSubtitleUz());
+        aboutUsHeader.setSubtitleRu(entity.getSubtitleRu());
+        aboutUsHeader.setSubtitleEng(entity.getSubtitleEng());
+        aboutUsHeader.setDescriptionUz(entity.getDescriptionUz());
+        aboutUsHeader.setDescriptionRu(entity.getDescriptionRu());
+        aboutUsHeader.setDescriptionEng(entity.getDescriptionEng());
 
         AboutUsHeader saved = aboutUsHeaderRepository.save(aboutUsHeader);
         response.setMessage("Successfully created");
         response.setData(saved);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
-    public ResponseEntity<ApiResponse<AboutUsHeaderDTO>> getById(Long id, String lang) {
-        ApiResponse<AboutUsHeaderDTO> response = new ApiResponse<>();
+
+    public ResponseEntity<ApiResponse<AboutUsHeader>> uploadImage(Long id, MultipartFile file) {
+        ApiResponse<AboutUsHeader> response = new ApiResponse<>();
+
+        if (!(file.getContentType().equals("image/png") ||
+                file.getContentType().equals("image/svg+xml"))) {
+            response.setMessage("Invalid file , only image/png or image/svg+xml");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
         if (!aboutUsHeaderRepository.existsById(id)) {
-            response.setMessage("Article with id " + id + " does not exist");
+            response.setMessage("Data with id " + id + " does not exist");
             return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }
         AboutUsHeader aboutUsHeader = aboutUsHeaderRepository.findById(id).get();
-        response.setMessage("Found article with id " + id);
+        response.setMessage("Found data with id " + id);
+        aboutUsHeader.setPhoto(photoService.save(file));
+        AboutUsHeader saved = aboutUsHeaderRepository.save(aboutUsHeader);
+        response.setMessage("Successfully created");
+        response.setData(saved);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    public ResponseEntity<ApiResponse<AboutUsHeaderDTO>> getById(Long id, String lang) {
+        ApiResponse<AboutUsHeaderDTO> response = new ApiResponse<>();
+        if (!aboutUsHeaderRepository.existsById(id)) {
+            response.setMessage("Data with id " + id + " does not exist");
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        }
+        AboutUsHeader aboutUsHeader = aboutUsHeaderRepository.findById(id).get();
+        response.setMessage("Found data with id " + id);
 
         response.setData(new AboutUsHeaderDTO(aboutUsHeader, lang));
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -72,7 +94,7 @@ public class AboutUsHeaderService {
     }
 
 
-    public ResponseEntity<ApiResponse<AboutUsHeader>> update(Long id ,AboutUsHeader newAboutUsHeader,MultipartFile photo) {
+    public ResponseEntity<ApiResponse<AboutUsHeader>> update(Long id, AboutUsHeader newAboutUsHeader) {
         ApiResponse<AboutUsHeader> response = new ApiResponse<>();
         Optional<AboutUsHeader> optionalAboutUsHeader = aboutUsHeaderRepository.findAll().stream().findFirst();
         if (optionalAboutUsHeader.isEmpty()) {
@@ -81,43 +103,68 @@ public class AboutUsHeaderService {
         }
         AboutUsHeader newentity = aboutUsHeaderRepository.findById(id).get();
 
-        if (newAboutUsHeader.getTitleUz() != null || !newAboutUsHeader.getTitleUz().isEmpty()) {
+        if (newAboutUsHeader.getTitleUz() != null ) {
             newentity.setTitleUz(newAboutUsHeader.getTitleUz());
         }
-        if (newAboutUsHeader.getTitleRu() != null || !newAboutUsHeader.getTitleRu().isEmpty()) {
+        if (newAboutUsHeader.getTitleRu() != null ) {
             newentity.setTitleRu(newAboutUsHeader.getTitleRu());
         }
-        if (newAboutUsHeader.getTitleEng() != null || !newAboutUsHeader.getTitleEng().isEmpty()) {
+        if (newAboutUsHeader.getTitleEng() != null ) {
             newentity.setTitleUz(newAboutUsHeader.getTitleUz());
         }
-        if (newAboutUsHeader.getFormName() != null || !newAboutUsHeader.getFormName().isEmpty()) {
+        if (newAboutUsHeader.getFormName() != null ) {
             newentity.setFormName(newAboutUsHeader.getFormName());
         }
-        if (newAboutUsHeader.getSubtitleUz() != null || !newAboutUsHeader.getSubtitleUz().isEmpty()) {
+        if (newAboutUsHeader.getSubtitleUz() != null  ) {
             newentity.setSubtitleUz(newAboutUsHeader.getSubtitleUz());
         }
-        if (newAboutUsHeader.getSubtitleRu() != null || !newAboutUsHeader.getSubtitleRu().isEmpty()) {
+        if (newAboutUsHeader.getSubtitleRu() != null ) {
             newentity.setSubtitleRu(newAboutUsHeader.getSubtitleRu());
         }
-        if (newAboutUsHeader.getSubtitleEng() != null || !newAboutUsHeader.getSubtitleEng().isEmpty()) {
+        if (newAboutUsHeader.getSubtitleEng() != null ) {
             newentity.setSubtitleEng(newAboutUsHeader.getSubtitleEng());
         }
 
-        if (newAboutUsHeader.getDescriptionUz() != null || !newAboutUsHeader.getDescriptionUz().isEmpty()) {
+        if (newAboutUsHeader.getDescriptionUz() != null ) {
             newentity.setDescriptionUz(newAboutUsHeader.getDescriptionUz());
         }
-        if (newAboutUsHeader.getDescriptionRu() != null || !newAboutUsHeader.getDescriptionRu().isEmpty()) {
+        if (newAboutUsHeader.getDescriptionRu() != null ) {
             newentity.setDescriptionRu(newAboutUsHeader.getDescriptionRu());
         }
-        if (newAboutUsHeader.getDescriptionEng() != null || !newAboutUsHeader.getDescriptionEng().isEmpty()) {
+        if (newAboutUsHeader.getDescriptionEng() != null ) {
             newentity.setDescriptionEng(newAboutUsHeader.getDescriptionEng());
         }
-        if (photo!=null||!photo.isEmpty()){
-            newentity.setPhoto(photoService.save(photo));
-        }
+
 
         newentity.setId(id);
         AboutUsHeader save = aboutUsHeaderRepository.save(newentity);
+
+        response.setMessage("Successfully updated");
+        response.setData(save);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    public ResponseEntity<ApiResponse<AboutUsHeader>> updateImage(Long id, MultipartFile file) {
+        ApiResponse<AboutUsHeader> response = new ApiResponse<>();
+
+
+        if (!(file.getContentType().equals("image/png") ||
+                file.getContentType().equals("image/svg+xml"))) {
+            response.setMessage("Invalid file , only image/png or image/svg+xml");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+        if (!aboutUsHeaderRepository.existsById(id)) {
+            if (!aboutUsHeaderRepository.existsById(id)) {
+                response.setMessage("Article with id " + id + " does not exist");
+                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+            }
+        }
+        AboutUsHeader aboutUsHeader = aboutUsHeaderRepository.findById(id).get();
+        if (file != null ){
+            aboutUsHeader.setPhoto(photoService.save(file));
+        }
+        aboutUsHeader.setId(id);
+        AboutUsHeader save = aboutUsHeaderRepository.save(aboutUsHeader);
 
         response.setMessage("Successfully updated");
         response.setData(save);
@@ -136,7 +183,6 @@ public class AboutUsHeaderService {
         response.setMessage("Successfully deleted!");
         return ResponseEntity.status(200).body(response);
     }
-
 
 
 }

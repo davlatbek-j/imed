@@ -11,7 +11,7 @@ import uz.imed.entity.AboutUsPartner;
 import uz.imed.payload.AboutUsChooseUsDTO;
 import uz.imed.payload.AboutUsHeaderDTO;
 import uz.imed.payload.ApiResponse;
-import uz.imed.service.AboutUsCertificaresService;
+import uz.imed.service.AboutUsCertificatesService;
 import uz.imed.service.AboutUsChooseUsService;
 import uz.imed.service.AboutUsHeaderService;
 import uz.imed.service.AboutUsPartnerService;
@@ -29,7 +29,7 @@ public class AboutUsPageController {
 
     private final AboutUsChooseUsService aboutUsChooseUsService;
 
-    private final AboutUsCertificaresService aboutUsCertificaresService;
+    private final AboutUsCertificatesService aboutUsCertificaresService;
 
 
 
@@ -37,11 +37,17 @@ public class AboutUsPageController {
 
     @PostMapping("/header/create")
     public ResponseEntity<ApiResponse<AboutUsHeader>> createAboutUsHeader(
-            @RequestBody AboutUsHeader aboutUsHeader,
-            @RequestPart(value = "photo") MultipartFile photo
-    ) {
-        return aboutUsHeaderService.create(aboutUsHeader, photo);
+            @RequestBody AboutUsHeader aboutUsHeader
+    ) {return aboutUsHeaderService.create(aboutUsHeader);
     }
+
+@PostMapping("/upload-image")
+public  ResponseEntity<ApiResponse<AboutUsHeader>> uploadImage(
+        @RequestParam(name = "id") Long id,
+        @RequestParam(name = "photo") MultipartFile file
+){
+        return aboutUsHeaderService.uploadImage(id,file);
+}
 
     @GetMapping("/header/get-all")
     public ResponseEntity<ApiResponse<List<AboutUsHeaderDTO>>> findAllAboutUsHeader(
@@ -56,14 +62,20 @@ public class AboutUsPageController {
         return aboutUsHeaderService.getById(id,lang);
     }
 
-    @PutMapping("/header/update")
+    @PutMapping("/header/update/{id}")
     public ResponseEntity<ApiResponse<AboutUsHeader>> updateAboutUsHeader(
-            @RequestParam Long id,
-            @RequestBody AboutUsHeader aboutUsHeader,
-            @RequestParam(name = "photo") MultipartFile file
-
+            @PathVariable Long id,
+            @RequestBody AboutUsHeader aboutUsHeader
     ) {
-        return aboutUsHeaderService.update(id,aboutUsHeader,file);
+        return aboutUsHeaderService.update(id,aboutUsHeader);
+    }
+
+    @PutMapping("/header/update/image/{id}")
+    public ResponseEntity<ApiResponse<AboutUsHeader>> updateImage(
+            @PathVariable Long id,
+            @RequestParam(name = "photo") MultipartFile file
+    ){
+        return aboutUsHeaderService.updateImage(id,file);
     }
 
     @DeleteMapping("/header/delete")
@@ -73,10 +85,18 @@ public class AboutUsPageController {
 
     @PostMapping("/partner-service/create")
     public ResponseEntity<ApiResponse<AboutUsPartner>> createPartnerService(
-            @RequestBody AboutUsPartner partner,
-            @RequestPart(value = "photo") MultipartFile photo
+            @RequestBody AboutUsPartner partner
+
     ) {
-        return aboutUsPartnerService.create(partner, photo);
+        return aboutUsPartnerService.create(partner);
+    }
+
+    @PostMapping("/partner-service/upload-image")
+    public ResponseEntity<ApiResponse<AboutUsPartner>> uploadPartnerIcon(
+            @RequestParam(name = "id") Long id,
+            @RequestPart(value = "icon") MultipartFile icon
+    ){
+        return aboutUsPartnerService.uploadImage(id,icon);
     }
 
     @GetMapping("/partner-service/get/{id}")
@@ -94,10 +114,17 @@ public class AboutUsPageController {
     @PutMapping("/partner-service/update/{id}")
     public ResponseEntity<ApiResponse<AboutUsPartner>> updatePartnerTask(
             @PathVariable Long id,
-            @RequestBody AboutUsPartner partner,
-            @RequestPart(value = "photo") MultipartFile photo
+            @RequestBody AboutUsPartner partner
     ) {
-        return aboutUsPartnerService.update(id, partner, photo);
+        return aboutUsPartnerService.update(id, partner);
+    }
+
+    @PutMapping("/partner-service/update-icon/{id}")
+    public ResponseEntity<ApiResponse<AboutUsPartner>> updateIcon(
+            @PathVariable Long id,
+            @RequestPart(value = "icon") MultipartFile icon
+    ){
+        return aboutUsPartnerService.updateIcon(id,icon);
     }
 
     @PutMapping("/partner-service/change-active/{id}")
@@ -176,5 +203,12 @@ public class AboutUsPageController {
             @RequestParam MultipartFile photo
     ){
         return aboutUsCertificaresService.update(id,photo);
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<ApiResponse<?>> deleteCertificates(
+            @PathVariable Long id
+    ){
+        return aboutUsCertificaresService.delete(id);
     }
 }
