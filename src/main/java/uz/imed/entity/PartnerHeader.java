@@ -13,6 +13,12 @@ import lombok.NoArgsConstructor;
 public class PartnerHeader extends BaseEntity{
 
     @Column(length = 3000)
-    String description;
+    String descriptionUz;
+
+    @Column(length = 3000)
+    String descriptionRu;
+
+    @Column(length = 3000)
+    String descriptionEng;
 
 }

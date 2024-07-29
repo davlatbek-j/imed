@@ -17,14 +17,30 @@ import lombok.experimental.FieldDefaults;
 @Entity(name = "partner")
 public class Partner extends BaseEntity {
 
-    String title;
+    String titleUz;
+    String titleRu;
+    String titleEng;
 
-    @JsonProperty("main_description")
-    @Column(name = "main_description")
-    String mainDescription;
+    @JsonProperty("main_description_uz")
+    @Column(name = "main_description_uz")
+    String mainDescriptionUz;
+
+    @JsonProperty("main_description_ru")
+    @Column(name = "main_description_ru")
+    String mainDescriptionRu;
+
+    @JsonProperty("main_description_eng")
+    @Column(name = "main_description_eng")
+    String mainDescriptionEng;
 
     @Column(length = 1000)
-    String description;
+    String descriptionUz;
+
+    @Column(length = 1000)
+    String descriptionRu;
+
+    @Column(length = 1000)
+    String descriptionEng;
 
     @OneToOne
     Photo photo;

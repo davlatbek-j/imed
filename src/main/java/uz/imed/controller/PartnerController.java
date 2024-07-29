@@ -8,6 +8,7 @@ import uz.imed.entity.Partner;
 import uz.imed.entity.PartnerHeader;
 import uz.imed.payload.ApiResponse;
 import uz.imed.payload.PartnerDTO;
+import uz.imed.payload.PartnerHeaderDTO;
 import uz.imed.service.PartnerHeaderService;
 import uz.imed.service.PartnerService;
 
@@ -25,10 +26,17 @@ public class PartnerController {
 
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<Partner>> createPartner(
-            @RequestParam(value = "json") String partner,
-            @RequestPart(value = "photo") MultipartFile photo
+            @RequestBody Partner partner
     ) {
-        return partnerService.create(partner, photo);
+        return partnerService.create(partner);
+    }
+
+    @PostMapping("/upload_photo")
+    public ResponseEntity<ApiResponse<Partner>> uploadImage(
+         @RequestParam Long id,
+         @RequestPart(value = "photo") MultipartFile photo
+    ){
+        return partnerService.uploadImage(id,photo);
     }
 
     @GetMapping("/get/{slug}")
@@ -39,20 +47,25 @@ public class PartnerController {
     }
 
     @GetMapping("/get-all")
-    public ResponseEntity<ApiResponse<List<Partner>>> findAll() {
-        return partnerService.findAll();
+    public ResponseEntity<ApiResponse<List<PartnerDTO>>> findAll(
+            @RequestHeader(value = "Accept-Language", defaultValue = "ru") String lang
+    ) {
+        return partnerService.findAll(lang);
     }
 
     @GetMapping("/get-all-partner")
-    public ResponseEntity<ApiResponse<List<PartnerDTO>>> findAllForMenuPage() {
-        return partnerService.findSixPartnerForMainPage();
+    public ResponseEntity<ApiResponse<List<PartnerDTO>>> findAllForMenuPage(
+            @RequestHeader(value = "Accept-Language", defaultValue = "ru") String lang
+    ) {
+        return partnerService.findSixPartnerForMainPage(lang);
     }
 
     @GetMapping("/get-others/{partnerSlug}")
-    public ResponseEntity<ApiResponse<List<Partner>>> findOtherPartner(
+    public ResponseEntity<ApiResponse<List<PartnerDTO>>> findOtherPartner(
+            @RequestHeader(value = "Accept-Language", defaultValue = "ru") String lang,
             @PathVariable String partnerSlug
     ) {
-        return partnerService.findOtherPartnerBySlug(partnerSlug);
+        return partnerService.findOtherPartnerBySlug(partnerSlug,lang);
     }
 
 
@@ -78,9 +91,13 @@ public class PartnerController {
         return partnerHeaderService.create(header);
     }
 
+
     @GetMapping("/header/get")
-    public ResponseEntity<ApiResponse<PartnerHeader>> findHeader() {
-        return partnerHeaderService.find();
+    public ResponseEntity<ApiResponse<PartnerHeaderDTO>> findHeader(
+
+            @RequestHeader(value = "Accept-Language", defaultValue = "ru") String lang
+    ) {
+        return partnerHeaderService.find(lang);
     }
 
     @PutMapping("/header/update")
@@ -94,5 +111,6 @@ public class PartnerController {
     public ResponseEntity<ApiResponse<?>> deleteHeader() {
         return partnerHeaderService.delete();
     }
+
 
 }
