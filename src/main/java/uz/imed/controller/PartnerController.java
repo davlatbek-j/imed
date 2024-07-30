@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import uz.imed.entity.Partner;
-import uz.imed.entity.PartnerTranslation;
+import uz.imed.entity.translations.PartnerTranslation;
 import uz.imed.entity.Photo;
 import uz.imed.service.PartnerService;
 

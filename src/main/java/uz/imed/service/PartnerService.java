@@ -3,7 +3,7 @@ package uz.imed.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uz.imed.entity.Partner;
-import uz.imed.entity.PartnerTranslation;
+import uz.imed.entity.translations.PartnerTranslation;
 import uz.imed.repository.PartnerRepository;
 import uz.imed.repository.PartnerTranslationRepository;
 

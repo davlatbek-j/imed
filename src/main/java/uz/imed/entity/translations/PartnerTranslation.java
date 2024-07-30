@@ -1,4 +1,4 @@
-package uz.imed.entity;
+package uz.imed.entity.translations;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import uz.imed.entity.Partner;
 
 @Data
 @NoArgsConstructor
