@@ -51,24 +51,20 @@ public class Product
     @JsonProperty(value = "brand")
     Partner partner;
 
-//    @ManyToOne
-//    Catalog catalog;
+    @ManyToOne
+    Catalog catalog;
 
-//    @OneToMany(cascade = CascadeType.ALL, mappedBy = "product", orphanRemoval = true)
-//    List<Characteristic> characteristics;
-
-//    @OneToOne
-//    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-//    Photo mainPhoto;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "product", orphanRemoval = true)
+    List<Characteristic> characteristics;
 
     @OneToMany
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     List<Photo> gallery;
 
-//    @PostPersist
-//    private void setIdToCharacteristics()
-//    {
-//        if (this.characteristics != null)
-//            this.characteristics.forEach(i -> i.setProduct(this));
-//    }
+    @PostPersist
+    private void setIdToCharacteristics()
+    {
+        if (this.characteristics != null)
+            this.characteristics.forEach(i -> i.setProduct(this));
+    }
 }

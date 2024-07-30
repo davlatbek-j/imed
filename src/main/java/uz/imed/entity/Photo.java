@@ -1,6 +1,11 @@
 package uz.imed.entity;
 
-import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,24 +16,31 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-
-@Entity
+@Entity(name = "photo")
 public class Photo
 {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
+    @JsonIgnore
     String name;
 
-    String filepath;
+    @JsonIgnore
+    String filePath;
 
+    @JsonProperty(value = "url", access = JsonProperty.Access.READ_ONLY)
     String httpUrl;
 
-    public Photo(String name, String filepath, String httpUrl)
+    @JsonIgnore
+    String type;
+
+    public Photo(String name, String filePath, String httpUrl)
     {
         this.name = name;
-        this.filepath = filepath;
+        this.filePath = filePath;
         this.httpUrl = httpUrl;
     }
+
 }

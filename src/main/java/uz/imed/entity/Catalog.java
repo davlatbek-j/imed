@@ -7,6 +7,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import uz.imed.entity.translations.CatalogTranslations;
+
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -19,9 +22,10 @@ public class Catalog
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    String name;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnore
     Category categoryItem;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "catalog", orphanRemoval = true)
+    List<CatalogTranslations> translations;
 }
