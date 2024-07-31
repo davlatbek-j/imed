@@ -14,8 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(name = "partner")
-public class Partner
-{
+public class Partner {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
@@ -26,10 +25,13 @@ public class Partner
     @OneToOne(cascade = CascadeType.REMOVE, orphanRemoval = true)
     Photo logo;
 
-    boolean active;
+    Boolean active;
 
     String website;
 
     @OneToMany(mappedBy = "partner", cascade = CascadeType.ALL, orphanRemoval = true)
     List<PartnerTranslation> translations;
+
+    Integer orderNum;
+
 }

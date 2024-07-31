@@ -1,5 +1,6 @@
 package uz.imed.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -12,14 +13,14 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(name = "partner_translation")
-public class PartnerTranslation
-{
+public class PartnerTranslation {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
     @ManyToOne
-    @JoinColumn(name = "partner_id", nullable = false)
+    @JsonIgnore
     Partner partner;
 
     @Column(nullable = false)

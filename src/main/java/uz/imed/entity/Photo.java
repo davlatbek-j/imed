@@ -1,5 +1,7 @@
 package uz.imed.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -13,20 +15,24 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 
 @Entity
-public class Photo
-{
+public class Photo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
+    @JsonIgnore
     String name;
 
+    @JsonIgnore
     String filepath;
 
+    @JsonProperty(value = "url", access = JsonProperty.Access.READ_ONLY)
     String httpUrl;
 
-    public Photo(String name, String filepath, String httpUrl)
-    {
+    @JsonIgnore
+    String type;
+
+    public Photo(String name, String filepath, String httpUrl) {
         this.name = name;
         this.filepath = filepath;
         this.httpUrl = httpUrl;
