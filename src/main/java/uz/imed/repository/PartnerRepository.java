@@ -21,10 +21,6 @@ public interface PartnerRepository extends JpaRepository<Partner, Long> {
     @Query(value = "update partner set slug = :slug where id = :id", nativeQuery = true)
     void updateSlug(@Param("slug") String slug, @Param("id") Long partnerId);
 
-    @Query(value = "select * from partner order by id asc", nativeQuery = true)
-    List<Partner> findAllByOrderByIdAsc();
-
-
     @Query(value = "select * from partner where slug = :slug", nativeQuery = true)
     Optional<Partner> findBySlug(@Param("slug") String slug);
 

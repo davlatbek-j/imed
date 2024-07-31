@@ -9,11 +9,11 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Entity(name = "partner_translation")
-public class PartnerTranslation {
+@Entity(name = "client_translation")
+public class ClientTranslation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,17 +21,16 @@ public class PartnerTranslation {
 
     @ManyToOne
     @JsonIgnore
-    Partner partner;
+    Client client;
 
     @Column(nullable = false)
     String language;
 
     String name;
 
-    @Column(length = 1000)
-    String note;
-
     @Column(length = 5000)
-    String about;
+    String description;
+
+    String address;
 
 }

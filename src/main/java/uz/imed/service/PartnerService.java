@@ -45,7 +45,7 @@ public class PartnerService {
                 translation.setPartner(savedPartner);
                 partnerTranslationRepository.save(translation);
             }
-            String slug = savedPartner.getId() + "-" + SlugUtil.makeSlug(getPartnerNameForSlug(partner));
+            String slug = savedPartner.getId() + "-" + SlugUtil.makeSlug(getPartnerNameForSlug(partner.getTranslations()));
             partnerRepository.updateSlug(slug, savedPartner.getId());
             savedPartner.setSlug(slug);
             response.setData(savedPartner);
@@ -57,8 +57,8 @@ public class PartnerService {
         }
     }
 
-    private String getPartnerNameForSlug(Partner partner) {
-        return partner.getTranslations()
+    private String getPartnerNameForSlug(List<PartnerTranslation> partnerTranslations) {
+        return partnerTranslations
                 .stream()
                 .filter(translation -> translation.getLanguage().equals("en"))
                 .findFirst()

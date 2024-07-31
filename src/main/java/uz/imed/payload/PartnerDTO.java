@@ -42,18 +42,21 @@ public class PartnerDTO {
         this.logo = partner.getLogo();
         this.active = partner.getActive();
         this.website = partner.getWebsite();
-        PartnerTranslation partnerTranslation = getTranslationByLang(lang, partner.getTranslations());
+        PartnerTranslation partnerTranslation = TranslationHelper.getTranslationByLang(lang, partner.getTranslations());
         this.name = partnerTranslation.getName();
         this.note = partnerTranslation.getNote();
         this.about = partnerTranslation.getAbout();
+        this.orderNum= partner.getOrderNum();
     }
 
-    private PartnerTranslation getTranslationByLang(String lang, List<PartnerTranslation> partnerTranslations) {
-        return partnerTranslations
-                .stream()
-                .filter(translation -> translation.getLanguage().equals(lang))
-                .findFirst()
-                .orElseThrow(() -> new LanguageNotSupportException("Language not supported: " + lang));
+    static class TranslationHelper{
+        static PartnerTranslation getTranslationByLang(String lang, List<PartnerTranslation> partnerTranslations) {
+            return partnerTranslations
+                    .stream()
+                    .filter(translation -> translation.getLanguage().equals(lang))
+                    .findFirst()
+                    .orElseThrow(() -> new LanguageNotSupportException("Language not supported: " + lang));
+        }
     }
 
 }
