@@ -1,16 +1,14 @@
 package uz.imed.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import uz.imed.entity.BaseEntity;
+import uz.imed.entity.translation.EventTranslation;
+
 
 import java.util.List;
 
@@ -19,24 +17,19 @@ import java.util.List;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(name = "event")
-public class Event extends BaseEntity
-{
+public class Event {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
 
-    String headingUz;
-
-    String headingRu;
-
-    String headingEng;
-
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @Column(unique = true)
     String slug;
 
-    @OneToOne
-    @JsonProperty(value = "photo", access = JsonProperty.Access.READ_ONLY)
+    @OneToOne(cascade = CascadeType.REMOVE, orphanRemoval = true)
     Photo coverPhoto; // Main photo
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    List<EventAbout> abouts;
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<EventTranslation> eventTranslations;
 
     String dateFrom;
     String dateTo;
@@ -44,15 +37,6 @@ public class Event extends BaseEntity
     String timeFrom;
     String timeTo;
 
-
-    String organizerUz;
-    String organizerRu;
-    String organizerEng;
-
     String city;
 
-
-    String addressUz;
-    String addressRu;
-    String addressEng;
 }

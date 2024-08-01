@@ -18,63 +18,48 @@ import java.util.List;
 public class EventController {
     private final EventService eventService;
 
-    @PostMapping("/add")
-    public ResponseEntity<ApiResponse<Event>> add(
-            @RequestBody Event event) {
-        return eventService.add(event);
-    }
-
-    @PostMapping("/upload_image")
-
-    public ResponseEntity<ApiResponse<Event>> aploadImage(
-            @RequestParam(name = "id") Long id,
-            @RequestParam(name = "photo") MultipartFile file
+    @PostMapping("/create")
+    public ResponseEntity<ApiResponse<Event>> create(
+            @RequestParam(value = "json") String event,
+            @RequestPart(value = "photo") MultipartFile photo
     ) {
-        return eventService.uploadImage(id, file);
+        return eventService.create(event, photo);
     }
 
-    @GetMapping("/{slug}")
-    public ResponseEntity<ApiResponse<EventDTO>> findBySlug(
+    @GetMapping("/get/{slug}")
+    public ResponseEntity<ApiResponse<EventDTO>> findById(
             @PathVariable String slug,
-            @RequestHeader(value = "Accept-Language", defaultValue = "ru") String lang) {
-        return eventService.get(slug, lang);
+            @RequestHeader(value = "Accept-Language") String lang
+    ) {
+        return eventService.findBySlug(slug, lang);
     }
 
-    @GetMapping("/all")
-    public ResponseEntity<ApiResponse<List<EventDTO>>> getAll(
-            @RequestParam(value = "city", required = false) String city,
-            @RequestParam(value = "page", defaultValue = "1") int page,
-            @RequestParam(value = "size", defaultValue = "6") int size,
-            @RequestParam(value = "sort", defaultValue = "id,asc") String[] sort,
-            @RequestHeader(value = "Accept-Language", defaultValue = "ru") String lang) {
-        return eventService.getAll(city, page, size, sort, lang);
+    @GetMapping("/get-full-data/{id}")
+    public ResponseEntity<ApiResponse<Event>> findFullData(
+            @PathVariable Long id
+    ) {
+        return eventService.findFullDataById(id);
     }
 
-    @GetMapping("/city-list")
-    public ResponseEntity<ApiResponse<List<String>>> getCityList()
-    {
-        return eventService.getCityList();
+    @GetMapping("/get-all")
+    public ResponseEntity<ApiResponse<List<EventDTO>>> findAll(
+            @RequestHeader(value = "Accept-Language") String lang
+    ) {
+        return eventService.findAll(lang);
     }
 
-    @PutMapping
+    @PutMapping("/update")
     public ResponseEntity<ApiResponse<Event>> update(
-            @RequestBody Event event)
-    {
+            @RequestBody Event event
+    ) {
         return eventService.update(event);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public ResponseEntity<ApiResponse<?>> delete(
-            @PathVariable Long id)
-    {
-        return eventService.delete(id);
-    }
-
-    @DeleteMapping
-    public ResponseEntity<ApiResponse<?>> deleteAbouts(
-            @RequestParam(value = "about-id") Long aboutId)
-    {
-        return eventService.deleteAbout(aboutId);
+            @PathVariable Long id
+    ) {
+        return eventService.deleteById(id);
     }
 
 }

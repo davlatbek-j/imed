@@ -6,7 +6,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import uz.imed.entity.Event;
-import uz.imed.exeptions.LanguageNotSupportException;
+import uz.imed.entity.Photo;
+import uz.imed.entity.translation.EventTranslation;
+import uz.imed.exeptions.NotFoundException;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,13 +22,7 @@ public class EventDTO {
 
     Long id;
 
-    String heading;
-
     String slug;
-
-    PhotoDTO photoDTO;
-
-    List<EventAboutDTO> eventAboutDTOS;
 
     String dateFrom;
     String dateTo;
@@ -33,54 +30,46 @@ public class EventDTO {
     String timeFrom;
     String timeTo;
 
-    String organizer;
-
     String city;
+
+    Photo coverPhoto;
+
+    String heading;
+
+    String organizer;
 
     String address;
 
-    public EventDTO(Event event,String lang){
-        this.id=event.getId();
+    String text;
+
+    public EventDTO(Event event, String lang) {
+        this.id = event.getId();
         this.slug=event.getSlug();
-        this.photoDTO=new PhotoDTO(event.getCoverPhoto());
         this.dateFrom=event.getDateFrom();
         this.dateTo=event.getDateTo();
         this.timeFrom=event.getTimeFrom();
         this.timeTo=event.getTimeTo();
-        this.eventAboutDTOS=new ArrayList<>();
-        event.getAbouts().forEach(i->this.eventAboutDTOS.add(new EventAboutDTO(i,lang)));
         this.city=event.getCity();
+        this.coverPhoto=event.getCoverPhoto();
 
-        switch (lang.toLowerCase()){
+        EventTranslation eventTranslation=TranslationHelper.getTranslationByLang(lang,event.getEventTranslations());
+        this.heading=eventTranslation.getHeading();
+        this.organizer= eventTranslation.getOrganizer();
+        this.address=eventTranslation.getAddress();
+        this.text=eventTranslation.getText();
 
-            case "uz":
-            {
-                this.heading=event.getHeadingUz();
-                this.organizer=event.getOrganizerUz();
-                this.address=event.getAddressUz();
-                break;
-            }
 
-            case "ru":
-            {
-                this.heading=event.getHeadingRu();
-                this.organizer=event.getOrganizerRu();
-                this.address=event.getAddressEng();
-                break;
-            }
+    }
 
-            case "eng":
-            {
-                this.heading=event.getHeadingEng();
-                this.organizer=event.getOrganizerEng();
-                this.address=event.getAddressEng();
-                break;
-            }
-            default:{
-                throw new LanguageNotSupportException("Language not supported: " + lang);
-            }
+    static class TranslationHelper {
+        static EventTranslation getTranslationByLang(String lang, List<EventTranslation> clientTranslations) {
+            return clientTranslations
+                    .stream()
+                    .filter(translation -> translation.getLanguage().equals(lang))
+                    .findFirst()
+                    .orElseThrow(() -> new NotFoundException("Language not supported: " + lang));
+
         }
-
     }
 
 

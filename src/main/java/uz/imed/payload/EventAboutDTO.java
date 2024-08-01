@@ -1,3 +1,4 @@
+/*
 package uz.imed.payload;
 
 import lombok.AccessLevel;
@@ -5,7 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import uz.imed.entity.EventAbout;
+import uz.imed.entity.translation.EvenTranslation;
 import uz.imed.exeptions.LanguageNotSupportException;
 
 @Data
@@ -20,7 +21,7 @@ public class EventAboutDTO {
 
     String text;
 
-    public  EventAboutDTO(EventAbout eventAbout,String lang){
+    public  EventAboutDTO(EvenTranslation eventAbout, String lang){
         this.id=eventAbout.getId();
         switch (lang.toLowerCase()){
             case "uz":
@@ -48,3 +49,4 @@ public class EventAboutDTO {
     }
 
 }
+*/
