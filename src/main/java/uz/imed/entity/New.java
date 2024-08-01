@@ -1,14 +1,17 @@
 package uz.imed.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
+import uz.imed.entity.BaseEntity;
+import uz.imed.entity.translation.NewTranslation;
 
+import java.util.Date;
 import java.util.List;
 
 @Data
@@ -16,23 +19,28 @@ import java.util.List;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(name = "news")
-public class New extends BaseEntity {
+public class New
+{
 
-    String title;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
 
-    @Column(length = 5000)
-    String body;
+    @OneToOne(cascade = CascadeType.REMOVE, orphanRemoval = true)
+    Photo photo;
 
-    String date;
 
-    String mainPhotoUrl;
-
-    @ElementCollection
-    List<String> photoUrls;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "newness")
+    List<NewTranslation> translations;
 
     @Column(unique = true)
     String slug;
 
-    boolean active;
+    Integer orderNum;
 
+    @CreationTimestamp
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
+    Date createDate;
+
+    Boolean active;
 }

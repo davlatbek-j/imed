@@ -1,7 +1,9 @@
 package uz.imed.controller;
 
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.Part;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -10,6 +12,9 @@ import uz.imed.payload.ApiResponse;
 import uz.imed.payload.NewDTO;
 import uz.imed.service.NewService;
 
+import java.io.*;
+import java.util.Collection;
+import java.util.Enumeration;
 import java.util.List;
 
 @RestController
@@ -19,71 +24,48 @@ public class NewController {
 
     private final NewService newService;
 
-
     @PostMapping("/create")
-    public ResponseEntity<ApiResponse<New>> createNew(
-            @RequestParam(value = "json") String newness,
-            @RequestPart(value = "mainPhoto") MultipartFile mainPhoto,
-            @RequestPart(value = "photos") List<MultipartFile> photos
+    public ResponseEntity<ApiResponse<New>> create(
+            @RequestParam(value = "json") String client,
+            @RequestPart(value = "photo") MultipartFile photo
     ) {
-        return newService.create(newness, mainPhoto, photos);
+        return newService.create(client, photo);
     }
 
     @GetMapping("/get/{slug}")
-    public ResponseEntity<ApiResponse<New>> findBySlug(
-            @PathVariable String slug
+    public ResponseEntity<ApiResponse<NewDTO>> findById(
+            @PathVariable String slug,
+            @RequestHeader(value = "Accept-Language") String lang
     ) {
-        return newService.findBySlug(slug);
+        return newService.findBySlug(slug, lang);
+    }
+
+    @GetMapping("/get-full-data/{id}")
+    public ResponseEntity<ApiResponse<New>> findFullData(
+            @PathVariable Long id
+    ) {
+        return newService.findFullDataById(id);
     }
 
     @GetMapping("/get-all")
-    public ResponseEntity<ApiResponse<List<NewDTO>>> findAll() {
-        return newService.findAll();
-    }
-
-    @GetMapping("/get-page")
-    public ResponseEntity<ApiResponse<Page<NewDTO>>> findAllByPageNation(
-            @RequestParam(value = "page") Integer page,
-            @RequestParam(value = "size", required = false, defaultValue = "12") Integer size
+    public ResponseEntity<ApiResponse<List<NewDTO>>> findAll(
+            @RequestHeader(value = "Accept-Language") String lang
     ) {
-        return newService.findAllByPageNation(page, size);
+        return newService.findAll(lang);
     }
 
-    @GetMapping("/get-all-other/{newSlug}")
-    public ResponseEntity<ApiResponse<List<NewDTO>>> findOtherFourNews(
-            @PathVariable String newSlug
-    ) {
-        return newService.findOtherFourNews(newSlug);
-    }
-
-    @GetMapping("/get-four")
-    public ResponseEntity<ApiResponse<List<NewDTO>>> findFourNews() {
-        return newService.findFourNews();
-    }
-
-    @PutMapping("/update/{id}")
+    @PutMapping("/update")
     public ResponseEntity<ApiResponse<New>> update(
-            @PathVariable Long id,
-            @RequestParam(value = "json") String newness,
-            @RequestPart(value = "mainPhoto") MultipartFile mainPhoto,
-            @RequestPart(value = "photos") List<MultipartFile> photos
+            @RequestBody New newn
     ) {
-        return newService.update(id, newness, mainPhoto, photos);
-    }
-
-    @PutMapping("/change-active/{id}")
-    public ResponseEntity<ApiResponse<?>> changeActive(
-            @PathVariable Long id
-    ) {
-        return newService.changeActive(id);
+        return newService.update(newn);
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<ApiResponse<?>> deleteNew(
+    public ResponseEntity<ApiResponse<?>> delete(
             @PathVariable Long id
     ) {
         return newService.deleteById(id);
     }
-
 
 }

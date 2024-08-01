@@ -4,188 +4,136 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
 import uz.imed.entity.New;
+import uz.imed.entity.translation.NewTranslation;
+import uz.imed.exeptions.NotFoundException;
 import uz.imed.payload.ApiResponse;
 import uz.imed.payload.NewDTO;
 import uz.imed.repository.NewRepository;
+import uz.imed.repository.NewTranslationRepository;
 import uz.imed.util.SlugUtil;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class NewService {
+public class NewService
+{
 
     private final NewRepository newRepository;
+
+    private final NewTranslationRepository newTranslationRepository;
 
     private final PhotoService photoService;
 
     private final ObjectMapper objectMapper;
 
-    public ResponseEntity<ApiResponse<New>> create(String strNew, MultipartFile mainPhoto, List<MultipartFile> photoFiles) {
-
+    public ResponseEntity<ApiResponse<New>> create(String json, MultipartFile photoFile) {
         ApiResponse<New> response = new ApiResponse<>();
         try {
-            New newness = objectMapper.readValue(strNew, New.class);
-            newness.setPhotoUrls(new ArrayList<>());
-            newness.setActive(true);
-            newness.setMainPhotoUrl(photoService.save(mainPhoto).getHttpUrl());
-            for (MultipartFile photo : photoFiles) {
-                newness.getPhotoUrls().add(photoService.save(photo).getHttpUrl());
+            New aNew = objectMapper.readValue(json, New.class);
+            aNew.setActive(true);
+            aNew.setPhoto(photoService.save(photoFile));
+            New savedNew = newRepository.save(aNew);
+            for (NewTranslation translation : aNew.getTranslations()) {
+                translation.setNewness(savedNew);
+                newTranslationRepository.save(translation);
             }
-            New save = newRepository.save(newness);
-            String slug = save.getId() + "-" + SlugUtil.makeSlug(save.getTitle());
-            newRepository.updateSlug(slug, save.getId());
-            save.setSlug(slug);
-            response.setData(save);
-            return ResponseEntity.status(200).body(response);
+            String slug = savedNew.getId() + "-" + SlugUtil.makeSlug(getClientNameForSlug(aNew.getTranslations()));
+            newRepository.updateSlug(slug, savedNew.getId());
+            savedNew.setSlug(slug);
+            response.setData(savedNew);
+            return ResponseEntity.ok(response);
+
         } catch (JsonProcessingException e) {
             response.setMessage(e.getMessage());
-            return ResponseEntity.status(409).body(response);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
     }
 
-    public ResponseEntity<ApiResponse<New>> findById(Long id) {
+    private String getClientNameForSlug(List<NewTranslation> translations) {
+        return translations
+                .stream()
+                .filter(translation -> translation.getLanguage().equals("en"))
+                .findFirst()
+                .map(NewTranslation::getHeading)
+                .orElse(null);
+    }
+
+    public ResponseEntity<ApiResponse<NewDTO>> findBySlug(String slug, String lang) {
+        ApiResponse<NewDTO> response = new ApiResponse<>();
+        New aNew = newRepository.findBySlug(slug).orElseThrow(() -> new NotFoundException("New is not found by slug: " + slug));
+        response.setData(new NewDTO(aNew, lang));
+        return ResponseEntity.ok(response);
+    }
+
+    public ResponseEntity<ApiResponse<New>> findFullDataById(Long id) {
         ApiResponse<New> response = new ApiResponse<>();
-        Optional<New> optionalNew = newRepository.findById(id);
-        if (optionalNew.isEmpty()) {
-            response.setMessage("New is not found by id: " + id);
-            return ResponseEntity.status(404).body(response);
-        }
-        New newness = optionalNew.get();
-        response.setMessage("Found");
-        response.setData(newness);
-        return ResponseEntity.status(200).body(response);
+        New aNew = newRepository.findById(id).orElseThrow(() -> new NotFoundException("New is not found by id: " + id));
+        response.setData(aNew);
+        return ResponseEntity.ok(response);
     }
 
-    public ResponseEntity<ApiResponse<New>> findBySlug(String slug) {
-        ApiResponse<New> response = new ApiResponse<>();
-        Optional<New> optionalNew = newRepository.findBySlug(slug);
-        if (optionalNew.isEmpty()) {
-            response.setMessage("New is not found by slug: " + slug);
-            return ResponseEntity.status(404).body(response);
-        }
-        New newness = optionalNew.get();
-        response.setMessage("Found");
-        response.setData(newness);
-        return ResponseEntity.status(200).body(response);
-    }
-
-    public ResponseEntity<ApiResponse<List<NewDTO>>> findAll() {
+    public ResponseEntity<ApiResponse<List<NewDTO>>> findAll(String lang) {
         ApiResponse<List<NewDTO>> response = new ApiResponse<>();
+        response.setData(new ArrayList<>());
         List<New> all = newRepository.findAll();
-        response.setData(new ArrayList<>());
-        all.forEach(newness -> response.getData().add(new NewDTO(newness)));
-        response.setMessage("Found " + all.size() + " new(s)");
-        return ResponseEntity.status(200).body(response);
+        all.forEach(aNew -> response.getData().add(new NewDTO(aNew, lang)));
+        response.setMessage("Found " + all.size() + " aNew(s)");
+        return ResponseEntity.ok(response);
     }
 
-    public ResponseEntity<ApiResponse<Page<NewDTO>>> findAllByPageNation(int page, int size) {
-        ApiResponse<Page<NewDTO>> response = new ApiResponse<>();
-        Pageable pageable = PageRequest.of(page - 1, size);
-        Page<New> all = newRepository.findAll(pageable);
-        Page<NewDTO> map = all.map(NewDTO::new);
-        response.setData(map);
-        return ResponseEntity.status(200).body(response);
-    }
-
-    public ResponseEntity<ApiResponse<List<NewDTO>>> findFourNews() {
-        ApiResponse<List<NewDTO>> response = new ApiResponse<>();
-        List<New> all = newRepository.findAllByOrderByIdAsc();
-        response.setData(new ArrayList<>());
-        all.stream().limit(4).toList().forEach(newness -> response.getData().add(new NewDTO(newness)));
-        return ResponseEntity.status(200).body(response);
-    }
-
-    public ResponseEntity<ApiResponse<List<NewDTO>>> findOtherFourNews(String newSlug) {
-        ApiResponse<List<NewDTO>> response = new ApiResponse<>();
-        List<New> all = newRepository.findAllByOrderByIdAsc();
-        response.setData(new ArrayList<>());
-        all.stream()
-                .filter(newness -> !newness.getSlug().equals(newSlug))
-                .limit(4).toList()
-                .forEach(newness -> response.getData().add(new NewDTO(newness)));
-        return ResponseEntity.status(200).body(response);
-    }
-
-
-    public ResponseEntity<ApiResponse<New>> update(Long id, String newJson, MultipartFile newMainPhoto, List<MultipartFile> newPhotosFile) {
+    public ResponseEntity<ApiResponse<New>> update(New newClient) {
         ApiResponse<New> response = new ApiResponse<>();
-        Optional<New> optionalNew = newRepository.findById(id);
-        if (optionalNew.isEmpty()) {
-            response.setMessage("New is not found by id: " + id);
-            return ResponseEntity.status(404).body(response);
-        }
-        List<String> oldPhotoUrls = optionalNew.get().getPhotoUrls();
-        String oldMainPhotoUrl = optionalNew.get().getMainPhotoUrl();
-        boolean active = optionalNew.get().isActive();
-        String slug = newRepository.findSlugById(id);
-        New newness = new New();
+        New existClient = newRepository.findById(newClient.getId()).orElseThrow(() -> new NotFoundException("New is not found by id: " + newClient.getId()));
+        if (newClient.getTranslations() != null) {
+            for (NewTranslation newTranslation : newClient.getTranslations()) {
+                NewTranslation existTranslation = existClient.getTranslations()
+                        .stream()
+                        .filter(clientTranslation -> clientTranslation.getLanguage().equals(newTranslation.getLanguage()))
+                        .findFirst()
+                        .orElseThrow(null);
+                if (existTranslation != null) {
+                    if (newTranslation.getHeading() != null) {
+                        if (newTranslation.getHeading().equals("en")) {
+                            String slug = existClient.getId() + "-" + SlugUtil.makeSlug(newTranslation.getHeading());
+                            existClient.setSlug(slug);
+                        }
+                        existTranslation.setHeading(newTranslation.getHeading());
+                    }
+                    if (newTranslation.getText() != null) {
+                        existTranslation.setText(newTranslation.getText());
+                    }
 
-        try {
-            if (newJson != null) {
-                newness = objectMapper.readValue(newJson, New.class);
-                newness.setId(id);
-                newness.setSlug(slug);
-                newness.setActive(active);
-            } else {
-                newness = newRepository.findById(id).get();
-            }
-
-            if (newMainPhoto == null || newMainPhoto.isEmpty()) {
-                newness.setMainPhotoUrl(oldMainPhotoUrl);
-            } else {
-                newness.setMainPhotoUrl(photoService.save(newMainPhoto).getHttpUrl());
-            }
-            if (newPhotosFile == null || newPhotosFile.isEmpty()) {
-                newness.setPhotoUrls(oldPhotoUrls);
-            } else {
-                newness.setPhotoUrls(new ArrayList<>());
-                for (MultipartFile photo : newPhotosFile) {
-                    newness.getPhotoUrls().add(photoService.save(photo).getHttpUrl());
+                    existTranslation.setNewness(existClient);
                 }
             }
-
-            New save = newRepository.save(newness);
-            response.setData(save);
-            return ResponseEntity.status(201).body(response);
-        } catch (JsonProcessingException e) {
-            response.setMessage(e.getMessage());
-            return ResponseEntity.status(401).body(response);
         }
+        New save = newRepository.save(existClient);
+        response.setData(save);
+        return ResponseEntity.ok(response);
     }
 
     public ResponseEntity<ApiResponse<?>> deleteById(Long id) {
         ApiResponse<?> response = new ApiResponse<>();
-        if (newRepository.findById(id).isEmpty()) {
-            response.setMessage("New is not found by id: " + id);
-            return ResponseEntity.status(404).body(response);
+        if (!newRepository.existsById(id)) {
+            throw new NotFoundException("New is not found by id: " + id);
         }
         newRepository.deleteById(id);
-        response.setMessage("Successfully deleted");
-        return ResponseEntity.status(200).body(response);
+        response.setMessage("Successfully deleted!");
+        return ResponseEntity.ok(response);
     }
 
-    public ResponseEntity<ApiResponse<?>> changeActive(Long id) {
-        ApiResponse<?> response = new ApiResponse<>();
-        Optional<New> optionalNew = newRepository.findById(id);
-        if (optionalNew.isEmpty()) {
-            response.setMessage("New is not found by id: " + id);
-            return ResponseEntity.status(404).body(response);
-        }
-        New newness = optionalNew.get();
-        boolean active = !newness.isActive();
-        newRepository.changeActive(id, active);
-        response.setMessage("Successfully changed! Current new active: " + active);
-        return ResponseEntity.status(200).body(response);
-    }
+
 }
