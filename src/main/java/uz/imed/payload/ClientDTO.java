@@ -23,8 +23,6 @@ public class ClientDTO {
 
     String description;
 
-    String slug;
-
     String locationUrl;
 
     PhotoDTO icon;
@@ -34,9 +32,9 @@ public class ClientDTO {
     public ClientDTO(Client client,String lang){
 
         this.id=client.getId();
-        this.slug=client.getSlug();
         this.locationUrl=client.getLocationUrl();
         this.icon=new PhotoDTO(client.getIcon());
+        this.gallery=new ArrayList<>();
         client.getGallery().forEach(i -> this.gallery.add(new PhotoDTO(i)));
 
         switch (lang.toLowerCase())

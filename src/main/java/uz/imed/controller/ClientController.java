@@ -20,63 +20,51 @@ public class ClientController {
 
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<Client>> create(
-            @RequestBody Client client) {
-        return clientService.create(client);
-    }
-
-    @PostMapping("/image")
-    public ResponseEntity<ApiResponse<Client>> uploadImage(
-            @RequestParam(name = "id") Long id,
-            @RequestParam(name = "photo") MultipartFile icon,
-            @RequestParam(name = "gallery") List<MultipartFile> files
+            @RequestParam("json") String json,
+            @RequestParam("icon") MultipartFile icon,
+            @RequestParam("gallery") List<MultipartFile> gallery
     ) {
-        return clientService.uploadImage(id, icon,files);
+        return clientService.create(json, icon, gallery);
     }
-
 
 
     @GetMapping("/get/{id}")
     public ResponseEntity<ApiResponse<ClientDTO>> findById(
             @PathVariable Long id,
-            @RequestHeader(value = "Accept-Language", defaultValue = "ru") String lang)
-    {
+            @RequestHeader(value = "Accept-Language", defaultValue = "ru") String lang) {
         return clientService.getById(id, lang);
     }
 
     @GetMapping("/get-all")
     public ResponseEntity<ApiResponse<List<ClientDTO>>> findAll(
-            @RequestHeader(value = "Accept-Language", defaultValue = "ru") String lang)
-    {
+            @RequestHeader(value = "Accept-Language", defaultValue = "ru") String lang) {
         return clientService.findAll(lang);
     }
 
-   /* @GetMapping("/get-full-data/{id}")
-    public ResponseEntity<ApiResponse<Client>> findWithLanguage(@PathVariable Long id)
-    {
-        return clientService.getById(id);
-    }*/
+    @GetMapping("/get_by_slug/{slug}")
+    public ResponseEntity<ApiResponse<?>> getBySlug(
+            @PathVariable String slug,
+            @RequestHeader(value = "Accept-Language",required = false) String lang) {
+        return clientService.get(slug, lang);
+    }
 
-    @PutMapping("/update/{id}")
+    @PutMapping("/update")
     public ResponseEntity<ApiResponse<Client>> update(
-            @PathVariable Long id,
-            @RequestBody Client client)
-    {
-        return clientService.update(id, client);
+            @RequestParam("json") String json) {
+        return clientService.update(json);
     }
 
     @PutMapping("/update/image/{id}")
     public ResponseEntity<ApiResponse<Client>> update(
             @PathVariable Long id,
             @RequestPart(name = "icon", required = false) MultipartFile icon,
-            @RequestPart(name = "gallery", required = false) List<MultipartFile> gallery)
-    {
+            @RequestPart(name = "gallery", required = false) List<MultipartFile> gallery) {
         return clientService.updatePhoto(id, icon, gallery);
     }
 
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<ApiResponse<Client>> delete(@PathVariable Long id)
-    {
+    public ResponseEntity<ApiResponse<Client>> delete(@PathVariable Long id) {
         return clientService.delete(id);
     }
 
