@@ -39,6 +39,7 @@ public class CategoryController
     public ResponseEntity<ApiResponse<List<?>>> getAll(
             @RequestHeader(value = "Accept-Language", required = false) String lang)
     {
-        return categoryService.getAll()
+//        return categoryService.getAll()
+        return null;
     }
 }
