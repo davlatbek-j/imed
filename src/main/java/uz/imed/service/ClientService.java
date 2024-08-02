@@ -115,15 +115,16 @@ public class ClientService {
 
             if (client.getNameUz() != null ) {
                 client1.setNameUz(client.getNameUz());
+                String slug = client.getId() + "-" + SlugUtil.makeSlug(client.getNameUz());
+                clientRepository.updateSlug(slug, client.getId());
+                client1.setSlug(slug);
             }
             if (client.getNameRu() != null ) {
                 client1.setNameRu(client.getNameRu());
             }
             if (client.getNameEng() != null ) {
                 client1.setNameEng(client.getNameEng());
-                String slug = client.getId() + "-" + SlugUtil.makeSlug(client.getNameEng());
-                clientRepository.updateSlug(slug, client.getId());
-                client1.setSlug(slug);
+
             }
             if (client.getDescriptionUz() != null ) {
                 client1.setDescriptionUz(client.getDescriptionUz());
