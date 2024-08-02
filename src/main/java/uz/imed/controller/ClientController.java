@@ -29,15 +29,15 @@ public class ClientController {
 
 
     @GetMapping("/get/{id}")
-    public ResponseEntity<ApiResponse<ClientDTO>> findById(
+    public ResponseEntity<ApiResponse<?>> findById(
             @PathVariable Long id,
-            @RequestHeader(value = "Accept-Language", defaultValue = "ru") String lang) {
+            @RequestHeader(value = "Accept-Language", required = false) String lang) {
         return clientService.getById(id, lang);
     }
 
     @GetMapping("/get-all")
-    public ResponseEntity<ApiResponse<List<ClientDTO>>> findAll(
-            @RequestHeader(value = "Accept-Language", defaultValue = "ru") String lang) {
+    public ResponseEntity<ApiResponse<?>> findAll(
+            @RequestHeader(value = "Accept-Language", required = false) String lang) {
         return clientService.findAll(lang);
     }
 
@@ -54,13 +54,7 @@ public class ClientController {
         return clientService.update(json);
     }
 
-    @PutMapping("/update/image/{id}")
-    public ResponseEntity<ApiResponse<Client>> update(
-            @PathVariable Long id,
-            @RequestPart(name = "icon", required = false) MultipartFile icon,
-            @RequestPart(name = "gallery", required = false) List<MultipartFile> gallery) {
-        return clientService.updatePhoto(id, icon, gallery);
-    }
+
 
 
     @DeleteMapping("/delete/{id}")
