@@ -15,7 +15,7 @@ import uz.imed.entity.Category;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 
 @Entity(name = "category_translation")
-public class CategoryTranslations
+public class CategoryTranslation
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,5 +29,4 @@ public class CategoryTranslations
     @Column(nullable = false)
     String language;
 
-    String name;
 }

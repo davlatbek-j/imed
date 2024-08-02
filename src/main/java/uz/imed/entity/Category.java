@@ -7,7 +7,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import uz.imed.entity.translations.CategoryTranslations;
 
 import java.util.List;
 
@@ -28,29 +27,26 @@ public class Category
     @Column(unique = true)
     String slug;
 
+    String nameUz;
+    String nameRu;
+    String nameEn;
+
     @OneToOne
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     Photo photo;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "categoryItem", orphanRemoval = true)
-    @JsonProperty(value = "catalog")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "category", orphanRemoval = true)
     List<Catalog> catalogs;
 
     Boolean active = true;
 
     Boolean main = true;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "category", orphanRemoval = true)
-    List<CategoryTranslations> translations;
-
     @PostPersist
+    @PostUpdate
     private void setCatalogId()
     {
         if (this.catalogs != null)
-            this.catalogs.forEach(i -> i.setCategoryItem(this));
-
-        if (this.translations != null)
-            this.translations.forEach(i -> i.setCategory(this));
+            this.catalogs.forEach(i -> i.setCategory(this));
     }
-
 }

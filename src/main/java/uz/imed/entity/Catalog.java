@@ -22,10 +22,11 @@ public class Catalog
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
+    String nameUz;
+    String nameRu;
+    String nameEn;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnore
-    Category categoryItem;
-
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "catalog", orphanRemoval = true)
-    List<CatalogTranslations> translations;
+    Category category;
 }

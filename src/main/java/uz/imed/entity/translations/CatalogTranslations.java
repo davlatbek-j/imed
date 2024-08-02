@@ -29,5 +29,4 @@ public class CatalogTranslations
     @Column(nullable = false)
     String lang;
 
-    String name;
 }
