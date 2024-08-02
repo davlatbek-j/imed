@@ -4,9 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import uz.imed.entity.Partner;
-import uz.imed.entity.translations.PartnerTranslation;
 import uz.imed.entity.Photo;
-import uz.imed.service.PartnerService;
 
 import java.util.List;
 
@@ -14,8 +12,8 @@ import java.util.List;
 @RequestMapping("/api/partners")
 public class PartnerController {
 
-    @Autowired
-    private PartnerService partnerService;
+//    @Autowired
+//    private PartnerService partnerService;
 
     @PostMapping
     public ResponseEntity<Partner> createPartner(@RequestBody PartnerRequest partnerRequest) {
@@ -24,10 +22,11 @@ public class PartnerController {
         partner.setLogo(partnerRequest.getLogo());
         partner.setActive(partnerRequest.isActive());
 
-        List<PartnerTranslation> translations = partnerRequest.getTranslations();
+//        List<PartnerTranslation> translations = partnerRequest.getTranslations();
 
-        Partner createdPartner = partnerService.createPartner(partner, translations);
-        return ResponseEntity.ok(createdPartner);
+//        Partner createdPartner = partnerService.createPartner(partner, translations);
+//        return ResponseEntity.ok(createdPartner);
+        return null;
     }
 }
 
@@ -35,7 +34,7 @@ class PartnerRequest {
     private String slug;
     private Photo logo;
     private boolean active;
-    private List<PartnerTranslation> translations;
+//    private List<PartnerTranslation> translations;
 
     // Getters and setters
 
@@ -63,11 +62,11 @@ class PartnerRequest {
         this.active = active;
     }
 
-    public List<PartnerTranslation> getTranslations() {
-        return translations;
-    }
+//    public List<PartnerTranslation> getTranslations() {
+//        return translations;
+//    }
 
-    public void setTranslations(List<PartnerTranslation> translations) {
-        this.translations = translations;
-    }
+//    public void setTranslations(List<PartnerTranslation> translations) {
+//        this.translations = translations;
+//    }
 }

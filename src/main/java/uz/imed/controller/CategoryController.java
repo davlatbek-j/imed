@@ -9,8 +9,6 @@ import uz.imed.entity.Category;
 import uz.imed.payload.ApiResponse;
 import uz.imed.service.CategoryService;
 
-import java.util.List;
-
 @RequiredArgsConstructor
 
 @Controller
@@ -36,10 +34,13 @@ public class CategoryController
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<?>>> getAll(
-            @RequestHeader(value = "Accept-Language", required = false) String lang)
+    public ResponseEntity<ApiResponse<?>> getAll(
+            @RequestHeader(value = "Accept-Language", required = false) String lang,
+            @RequestParam(value = "main", required = false) Boolean main,
+            @RequestParam(value = "active", required = false) Boolean active,
+            @RequestParam(value = "only-name", defaultValue = "false") boolean onlyName)
     {
-//        return categoryService.getAll()
-        return null;
+        return categoryService.getAll(lang, main, active, onlyName);
     }
+
 }

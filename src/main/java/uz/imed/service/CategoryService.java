@@ -10,13 +10,14 @@ import uz.imed.entity.Category;
 import uz.imed.exception.JsonParsingException;
 import uz.imed.exception.NotFoundException;
 import uz.imed.payload.ApiResponse;
-import uz.imed.payload.CategoryDTO;
+import uz.imed.payload.catalog.CategoryDTO;
+import uz.imed.payload.catalog.CategoryNameDTO;
 import uz.imed.repository.CatalogRepository;
-import uz.imed.repository.CatalogTranslationsRepository;
 import uz.imed.repository.CategoryRepository;
-import uz.imed.repository.CategoryTranslationRepository;
 import uz.imed.util.SlugUtil;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -27,8 +28,6 @@ public class CategoryService
     private final CategoryRepository categoryRepository;
     private final CatalogRepository catalogRepository;
     private final ObjectMapper objectMapper;
-    private final CategoryTranslationRepository categoryTranslationRepo;
-    private final CatalogTranslationsRepository catalogTranslationRepo;
     private final PhotoService photoService;
 
     public ResponseEntity<ApiResponse<Category>> add(String json, MultipartFile photo)
@@ -70,4 +69,81 @@ public class CategoryService
             return ResponseEntity.ok(response);
         }
     }
+
+    public ResponseEntity<ApiResponse<?>> getAll(String lang, Boolean main, Boolean active, boolean onlyName)
+    {
+        if (onlyName && lang == null)
+            throw new NotFoundException("When you need only name of categories, you must send language also");
+
+        if (lang == null)
+        {
+            ApiResponse<List<Category>> response = new ApiResponse<>();
+
+            if (main == null && active == null)
+                response.setData(categoryRepository.findAll());
+            else if (main == null)
+                response.setData(categoryRepository.findAllByActive(active));
+            else if (active == null)
+                response.setData(categoryRepository.findAllByMain(main));
+            else
+                response.setData(categoryRepository.findAllByMainAndActive(main, active));
+
+            response.setMessage(String.format("Found %s category(ies)", response.getData().size()));
+            return ResponseEntity.ok(response);
+
+        } else if (onlyName)
+        {
+            System.err.println("Only name ----------------- ");
+            ApiResponse<List<CategoryNameDTO>> response = new ApiResponse<>();
+            response.setData(new ArrayList<>());
+
+            if (main == null && active == null)
+            {
+                List<Category> all = categoryRepository.findAll();
+                all.forEach(i -> response.getData().add(new CategoryNameDTO(i, lang)));
+            } else if (main == null)
+            {
+                List<Category> allByActive = categoryRepository.findAllByActive(active);
+                allByActive.forEach(i -> response.getData().add(new CategoryNameDTO(i, lang)));
+            } else if (active == null)
+            {
+                List<Category> allByMain = categoryRepository.findAllByMain(main);
+                allByMain.forEach(i -> response.getData().add(new CategoryNameDTO(i, lang)));
+            } else
+            {
+                List<Category> allByMainAndActive = categoryRepository.findAllByMainAndActive(main, active);
+                allByMainAndActive.forEach(i -> response.getData().add(new CategoryNameDTO(i, lang)));
+            }
+
+            response.setMessage(String.format("Found %s category(ies)", response.getData().size()));
+            return ResponseEntity.ok(response);
+
+        } else
+        {
+            ApiResponse<List<CategoryDTO>> response = new ApiResponse<>();
+            response.setData(new ArrayList<>());
+
+            if (main == null && active == null)
+            {
+                List<Category> all = categoryRepository.findAll();
+                all.forEach(i -> response.getData().add(new CategoryDTO(i, lang)));
+            } else if (main == null)
+            {
+                List<Category> allByActive = categoryRepository.findAllByActive(active);
+                allByActive.forEach(i -> response.getData().add(new CategoryDTO(i, lang)));
+            } else if (active == null)
+            {
+                List<Category> allByMain = categoryRepository.findAllByMain(main);
+                allByMain.forEach(i -> response.getData().add(new CategoryDTO(i, lang)));
+            } else
+            {
+                List<Category> allByMainAndActive = categoryRepository.findAllByMainAndActive(main, active);
+                allByMainAndActive.forEach(i -> response.getData().add(new CategoryDTO(i, lang)));
+            }
+
+            response.setMessage(String.format("Found %s category(ies)", response.getData().size()));
+            return ResponseEntity.ok(response);
+        }
+    }
+
 }
