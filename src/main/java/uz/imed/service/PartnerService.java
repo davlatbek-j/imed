@@ -32,7 +32,7 @@ public class PartnerService {
     private final PhotoService photoService;
 
     private final ObjectMapper objectMapper;
-    
+
     public ResponseEntity<ApiResponse<Partner>> create(String json, MultipartFile logo) {
         ApiResponse<Partner> response = new ApiResponse<>();
         try {

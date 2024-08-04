@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import uz.imed.entity.PartnerHeader;
-import uz.imed.entity.PartnerHeaderTranslation;
 import uz.imed.exception.LanguageNotSupportException;
 
 import java.util.List;

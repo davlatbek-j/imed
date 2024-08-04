@@ -4,12 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import uz.imed.entity.PartnerHeader;
-import uz.imed.entity.PartnerHeaderTranslation;
 import uz.imed.exception.NotFoundException;
 import uz.imed.payload.ApiResponse;
 import uz.imed.payload.PartnerHeaderDTO;
 import uz.imed.repository.PartnerHeaderRepository;
-import uz.imed.repository.PartnerHeaderTranslationRepository;
 
 import java.util.Optional;
 
@@ -18,8 +16,6 @@ import java.util.Optional;
 public class PartnerHeaderService {
 
     private final PartnerHeaderRepository partnerHeaderRepository;
-
-    private final PartnerHeaderTranslationRepository partnerHeaderTranslationRepository;
 
     public ResponseEntity<ApiResponse<PartnerHeader>> create(PartnerHeader partnerHeader) {
         ApiResponse<PartnerHeader> response = new ApiResponse<>();
