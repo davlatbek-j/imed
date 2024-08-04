@@ -23,19 +23,19 @@ public class PartnerController {
 
     private final PartnerHeaderService partnerHeaderService;
 
-    @PostMapping("/create")
+    @PostMapping
     public ResponseEntity<ApiResponse<Partner>> create(
             @RequestParam(value = "json") String partner,
-            @RequestPart(value = "photo") MultipartFile photo
-    ) {
+            @RequestPart(value = "photo") MultipartFile photo) {
         return partnerService.create(partner, photo);
     }
 
-    @GetMapping("/get-full-data/{id}")
-    public ResponseEntity<ApiResponse<Partner>> findFullData(
-            @PathVariable Long id
-    ) {
-        return partnerService.findFullDataById(id);
+    //if Accept-Language==null return in all language(s)
+    @GetMapping("/{slug}")
+    public ResponseEntity<ApiResponse<?>> get(
+            @RequestHeader(value = "Accept-Language", required = false) String lang,
+            @PathVariable String slug) {
+        return partnerService.get(slug, lang);
     }
 
     @GetMapping("/get/{slug}")
@@ -43,28 +43,32 @@ public class PartnerController {
             @PathVariable String slug,
             @RequestHeader(value = "Accept-Language") String lang
     ) {
-        return partnerService.findBySlug(slug, lang);
+//        return partnerService.findBySlug(slug, lang);
+        return null;
     }
 
     @GetMapping("/get-all")
     public ResponseEntity<ApiResponse<List<PartnerDTO>>> findAll(
             @RequestHeader(value = "Accept-Language") String lang
     ) {
-        return partnerService.findAll(lang);
+//        return partnerService.findAll(lang);
+        return null;
     }
 
     @PutMapping("/update")
     public ResponseEntity<ApiResponse<Partner>> update(
             @RequestBody Partner partner
     ) {
-        return partnerService.update(partner);
+//        return partnerService.update(partner);
+        return null;
     }
 
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<ApiResponse<?>> deleteById(
             @PathVariable Long id
     ) {
-        return partnerService.deleteById(id);
+//        return partnerService.deleteById(id);
+        return null;
     }
 
     @PostMapping("/header/create")

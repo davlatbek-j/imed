@@ -13,6 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
+
 @Entity(name = "partner")
 public class Partner {
     @Id
@@ -25,13 +26,25 @@ public class Partner {
     @OneToOne(cascade = CascadeType.REMOVE, orphanRemoval = true)
     Photo logo;
 
-    Boolean active;
+    String name;
+
+    @Column(length = 1000)
+    String noteUz;
+    @Column(length = 1000)
+    String noteRu;
+    @Column(length = 1000)
+    String noteEn;
+
+    @Column(length = 5000)
+    String aboutUz;
+    @Column(length = 5000)
+    String aboutRu;
+    @Column(length = 5000)
+    String aboutEn;
 
     String website;
 
-    @OneToMany(mappedBy = "partner", cascade = CascadeType.ALL, orphanRemoval = true)
-    List<PartnerTranslation> translations;
-
     Integer orderNum;
 
+    Boolean active;
 }

@@ -6,9 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import uz.imed.entity.Partner;
-import uz.imed.entity.PartnerTranslation;
-import uz.imed.entity.Photo;
-import uz.imed.exception.LanguageNotSupportException;
 
 import java.util.List;
 
@@ -22,7 +19,7 @@ public class PartnerDTO {
 
     String slug;
 
-    Photo logo;
+    PhotoDTO logo;
 
     Boolean active;
 
@@ -39,24 +36,10 @@ public class PartnerDTO {
     public PartnerDTO(Partner partner, String lang) {
         this.id = partner.getId();
         this.slug = partner.getSlug();
-        this.logo = partner.getLogo();
+//        this.logo = partner.getLogo();
         this.active = partner.getActive();
         this.website = partner.getWebsite();
-        PartnerTranslation partnerTranslation = TranslationHelper.getTranslationByLang(lang, partner.getTranslations());
-        this.name = partnerTranslation.getName();
-        this.note = partnerTranslation.getNote();
-        this.about = partnerTranslation.getAbout();
         this.orderNum= partner.getOrderNum();
-    }
-
-    static class TranslationHelper{
-        static PartnerTranslation getTranslationByLang(String lang, List<PartnerTranslation> partnerTranslations) {
-            return partnerTranslations
-                    .stream()
-                    .filter(translation -> translation.getLanguage().equals(lang))
-                    .findFirst()
-                    .orElseThrow(() -> new LanguageNotSupportException("Language not supported: " + lang));
-        }
     }
 
 }

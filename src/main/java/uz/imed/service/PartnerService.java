@@ -9,12 +9,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import uz.imed.entity.Partner;
-import uz.imed.entity.PartnerTranslation;
 import uz.imed.exception.NotFoundException;
 import uz.imed.payload.ApiResponse;
 import uz.imed.payload.PartnerDTO;
 import uz.imed.repository.PartnerRepository;
-import uz.imed.repository.PartnerTranslationRepository;
 import uz.imed.util.SlugUtil;
 
 import java.util.ArrayList;
@@ -28,45 +26,30 @@ public class PartnerService {
 
     private final PartnerRepository partnerRepository;
 
-    private final PartnerTranslationRepository partnerTranslationRepository;
 
     private final PhotoService photoService;
 
     private final ObjectMapper objectMapper;
 
-    public ResponseEntity<ApiResponse<Partner>> create(String json, MultipartFile multipartFile) {
+    public ResponseEntity<ApiResponse<Partner>> create(String json, MultipartFile logo) {
         ApiResponse<Partner> response = new ApiResponse<>();
         try {
             Partner partner = objectMapper.readValue(json, Partner.class);
-            partner.setLogo(photoService.save(multipartFile));
-            partner.setActive(true);
-            Partner savedPartner = partnerRepository.save(partner);
-            for (PartnerTranslation translation : partner.getTranslations()) {
-                translation.setPartner(savedPartner);
-                partnerTranslationRepository.save(translation);
-            }
-            String slug = savedPartner.getId() + "-" + SlugUtil.makeSlug(getPartnerNameForSlug(partner.getTranslations()));
-            partnerRepository.updateSlug(slug, savedPartner.getId());
-            savedPartner.setSlug(slug);
-            response.setData(savedPartner);
-            return ResponseEntity.ok().body(response);
+            //for getting id save empty entity and use this id, id uses for making slug.
+            partner.setId(partnerRepository.save(new Partner()).getId());
+            partner.setSlug(partner.getId() + "-" + SlugUtil.makeSlug(partner.getName()));
+            partner.setLogo(photoService.save(logo));
 
+            response.setData(partnerRepository.save(partner));
+            response.setMessage("Added");
+            return ResponseEntity.ok().body(response);
         } catch (JsonProcessingException e) {
             response.setMessage(e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
     }
 
-    private String getPartnerNameForSlug(List<PartnerTranslation> partnerTranslations) {
-        return partnerTranslations
-                .stream()
-                .filter(translation -> translation.getLanguage().equals("en"))
-                .findFirst()
-                .map(PartnerTranslation::getName)
-                .orElse(null);
-    }
-
-    public ResponseEntity<ApiResponse<PartnerDTO>> findBySlug(String slug, String lang) {
+  /*  public ResponseEntity<ApiResponse<PartnerDTO>> findBySlug(String slug, String lang) {
         ApiResponse<PartnerDTO> response = new ApiResponse<>();
         Partner partner = partnerRepository.findBySlug(slug).orElseThrow(() -> new NotFoundException("Partner is not found by slug: " + slug));
         response.setData(new PartnerDTO(partner, lang));
@@ -108,7 +91,7 @@ public class PartnerService {
                         .orElseThrow(null);
                 if (existTranslation != null) {
                     if (newTranslation.getName() != null) {
-                        if (newTranslation.getLanguage().equals("en")){
+                        if (newTranslation.getLanguage().equals("en")) {
                             String slug = existPartner.getId() + "-" + SlugUtil.makeSlug(newTranslation.getName());
                             existPartner.setSlug(slug);
                         }
@@ -139,5 +122,20 @@ public class PartnerService {
         response.setMessage("Successfully deleted!");
         return ResponseEntity.ok(response);
     }
+*/
+    //TODO -----------------------
+    public ResponseEntity<ApiResponse<?>> get(String slug, String lang) {
+        Partner partner = partnerRepository.findBySlug(slug).orElseThrow(() -> new NotFoundException("Partner is not found by slug: " + slug));
+        if (lang == null) {
+            ApiResponse<Partner> response = new ApiResponse<>();
+            response.setData(partner);
+            response.setMessage("All languages");
+            return ResponseEntity.ok(response);
+        }else
+        {
+            ApiResponse<PartnerDTO> response = new ApiResponse<>();
+            return null;
 
+        }
+    }
 }
