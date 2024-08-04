@@ -27,4 +27,6 @@ public class AboutUsChooseUs extends BaseEntity {
 
     String descriptionEng;
 
+    String slug;
+
 }

@@ -1,4 +1,3 @@
-/*
 package uz.imed.payload;
 
 import lombok.AccessLevel;
@@ -6,47 +5,49 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import uz.imed.entity.translation.EvenTranslation;
+import uz.imed.entity.Certificate;
 import uz.imed.exeptions.LanguageNotSupportException;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class EventAboutDTO {
+public class CertificateDTO {
 
     Long id;
 
-    String heading;
+    String title;
 
-    String text;
+    String description;
 
-    public  EventAboutDTO(EvenTranslation eventAbout, String lang){
-        this.id=eventAbout.getId();
+    PhotoDTO photoDTO;
+
+    public CertificateDTO(Certificate certificate,String lang){
+        this.id= certificate.getId();;
+        this.photoDTO=new PhotoDTO(certificate.getCertificateImage());
+
         switch (lang.toLowerCase()){
             case "uz":
             {
-                this.heading=eventAbout.getHeadingUz();
-                this.text=eventAbout.getTextUz();
+                this.title=certificate.getTitleUz();
+                this.description=certificate.getDescriptionUz();
                 break;
             }
             case "ru":
             {
-                this.heading=eventAbout.getHeadingRu();
-                this.text=eventAbout.getHeadingRu();
+                this.title=certificate.getTitleRu();
+                this.description=certificate.getDescriptionRu();
                 break;
             }
             case "eng":
             {
-                this.heading=eventAbout.getHeadingEng();
-                this.text=eventAbout.getTextEng();
+                this.title=certificate.getTitleEng();
+                this.description=certificate.getDescriptionEng();
                 break;
             }
-            default:{
+            default:
                 throw new LanguageNotSupportException("Language not supported: " + lang);
-            }
+
         }
     }
-
 }
-*/

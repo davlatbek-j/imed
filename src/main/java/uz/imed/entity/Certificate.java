@@ -12,8 +12,23 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Entity(name = "about_us_certificates")
-public class AboutUsCertificates extends BaseEntity{
+@Entity(name = "certificate")
+public class Certificate extends BaseEntity{
+
+    String titleUz;
+
+    String titleRu;
+
+    String titleEng;
+
+    String descriptionUz;
+
+    String descriptionRu;
+
+    String descriptionEng;
+
+    String slug;
+
     @OneToOne
     Photo certificateImage;
 }
