@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import uz.imed.entity.Partner;
+import uz.imed.exception.LanguageNotSupportException;
 
 import java.util.List;
 
@@ -21,25 +22,41 @@ public class PartnerDTO {
 
     PhotoDTO logo;
 
-    Boolean active;
-
-    String website;
-
     String name;
 
     String note;
 
     String about;
 
+    String website;
+
     Integer orderNum;
 
-    public PartnerDTO(Partner partner, String lang) {
-        this.id = partner.getId();
-        this.slug = partner.getSlug();
-//        this.logo = partner.getLogo();
-        this.active = partner.getActive();
-        this.website = partner.getWebsite();
-        this.orderNum= partner.getOrderNum();
+    Boolean active;
+
+    public PartnerDTO(Partner entity, String lang) {
+        this.id = entity.getId();
+        this.slug = entity.getSlug();
+        this.logo = new PhotoDTO(entity.getLogo());
+        this.name = entity.getName();
+        this.website = entity.getWebsite();
+        this.orderNum = entity.getOrderNum();
+        this.active = entity.getActive();
+        switch (lang.toLowerCase()) {
+            case "uz" -> {
+                this.note = entity.getNoteUz();
+                this.about = entity.getAboutUz();
+            }
+            case "ru" -> {
+                this.note = entity.getNoteRu();
+                this.about = entity.getAboutRu();
+            }
+            case "en" -> {
+                this.note = entity.getNoteEn();
+                this.about = entity.getAboutEn();
+            }
+            default -> throw new LanguageNotSupportException("Language not supported: " + lang);
+        }
     }
 
 }

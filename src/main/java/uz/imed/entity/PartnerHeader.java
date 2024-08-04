@@ -13,6 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
+
 @Entity(name = "partner_header")
 public class PartnerHeader {
 
@@ -20,7 +21,17 @@ public class PartnerHeader {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @OneToMany(mappedBy = "partnerHeader", cascade = CascadeType.ALL, orphanRemoval = true)
-    List<PartnerHeaderTranslation> translations;
+    @Column(length = 500)
+    String titleUz;
+    @Column(length = 500)
+    String titleRu;
+    @Column(length = 500)
+    String titleEn;
 
+    @Column(length = 2000)
+    String textUz;
+    @Column(length = 2000)
+    String textRu;
+    @Column(length = 2000)
+    String textEn;
 }

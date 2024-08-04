@@ -19,25 +19,26 @@ public class PartnerHeaderDTO {
 
     Long id;
 
-    String name;
+    String title;
 
-    String description;
+    String text;
 
-    public PartnerHeaderDTO(PartnerHeader partnerHeader, String lang) {
-        this.id = partnerHeader.getId();
-        PartnerHeaderTranslation translation = TranslationHelper.getTranslationByLang(lang, partnerHeader.getTranslations());
-        this.name = translation.getName();
-        this.description = translation.getDescription();
-    }
-
-    static class TranslationHelper {
-        static PartnerHeaderTranslation getTranslationByLang(String lang, List<PartnerHeaderTranslation> translations) {
-            return translations
-                    .stream()
-                    .filter(translation -> translation.getLanguage().equals(lang))
-                    .findFirst()
-                    .orElseThrow(() -> new LanguageNotSupportException("Language not supported: " + lang));
+    public PartnerHeaderDTO(PartnerHeader entity, String lang) {
+        this.id = entity.getId();
+        switch (lang.toLowerCase()) {
+            case "uz" -> {
+                this.title = entity.getTitleUz();
+                this.text = entity.getTitleUz();
+            }
+            case "en" -> {
+                this.title = entity.getTitleEn();
+                this.text = entity.getTitleEn();
+            }
+            case "ru" -> {
+                this.title = entity.getTitleRu();
+                this.text = entity.getTitleRu();
+            }
+            default -> throw new LanguageNotSupportException("Language not supported: " + lang);
         }
     }
-
 }

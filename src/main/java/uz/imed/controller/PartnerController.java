@@ -7,12 +7,9 @@ import org.springframework.web.multipart.MultipartFile;
 import uz.imed.entity.Partner;
 import uz.imed.entity.PartnerHeader;
 import uz.imed.payload.ApiResponse;
-import uz.imed.payload.PartnerDTO;
 import uz.imed.payload.PartnerHeaderDTO;
 import uz.imed.service.PartnerHeaderService;
 import uz.imed.service.PartnerService;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/partner")
@@ -38,66 +35,45 @@ public class PartnerController {
         return partnerService.get(slug, lang);
     }
 
-    @GetMapping("/get/{slug}")
-    public ResponseEntity<ApiResponse<PartnerDTO>> findBySlug(
-            @PathVariable String slug,
-            @RequestHeader(value = "Accept-Language") String lang
-    ) {
-//        return partnerService.findBySlug(slug, lang);
-        return null;
-    }
-
-    @GetMapping("/get-all")
-    public ResponseEntity<ApiResponse<List<PartnerDTO>>> findAll(
-            @RequestHeader(value = "Accept-Language") String lang
-    ) {
-//        return partnerService.findAll(lang);
-        return null;
+    //OnlyLogoName using for choosing brand of product. Only logo and name
+    @GetMapping("/all")
+    public ResponseEntity<ApiResponse<?>> findBySlug(
+            @RequestHeader(value = "Accept-Language", required = false) String lang,
+            @RequestParam(value = "only-logo-name", required = false, defaultValue = "false") boolean onlyLogoName) {
+        return partnerService.all(lang, onlyLogoName);
     }
 
     @PutMapping("/update")
     public ResponseEntity<ApiResponse<Partner>> update(
-            @RequestBody Partner partner
-    ) {
-//        return partnerService.update(partner);
-        return null;
+            @RequestBody Partner partner) {
+        return partnerService.update(partner);
     }
 
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<?>> deleteById(
-            @PathVariable Long id
-    ) {
-//        return partnerService.deleteById(id);
-        return null;
+            @PathVariable Long id) {
+        return partnerService.delete(id);
     }
 
-    @PostMapping("/header/create")
+    @PostMapping("/header")
     public ResponseEntity<ApiResponse<PartnerHeader>> create(
-            @RequestBody PartnerHeader header
-    ) {
+            @RequestBody PartnerHeader header) {
         return partnerHeaderService.create(header);
     }
 
-    @GetMapping("/header/get")
-    public ResponseEntity<ApiResponse<PartnerHeaderDTO>> find(
-            @RequestHeader(value = "Accept-Language") String lang
-    ) {
-        return partnerHeaderService.find(lang);
+    @GetMapping("/header")
+    public ResponseEntity<ApiResponse<?>> get(
+            @RequestHeader(value = "Accept-Language", required = false) String lang) {
+        return partnerHeaderService.get(lang);
     }
 
-    @GetMapping("/header/get-full-data")
-    public ResponseEntity<ApiResponse<PartnerHeader>> findFullData() {
-        return partnerHeaderService.findFullData();
-    }
-
-    @PutMapping("/header/update")
+    @PutMapping("/header")
     public ResponseEntity<ApiResponse<PartnerHeader>> update(
-            @RequestBody PartnerHeader header
-    ) {
+            @RequestBody PartnerHeader header) {
         return partnerHeaderService.update(header);
     }
 
-    @DeleteMapping("/header/delete")
+    @DeleteMapping("/header")
     public ResponseEntity<ApiResponse<?>> delete() {
         return partnerHeaderService.delete();
     }

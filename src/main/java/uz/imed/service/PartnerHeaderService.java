@@ -28,32 +28,31 @@ public class PartnerHeaderService {
             return update(partnerHeader);
         }
         PartnerHeader saved = partnerHeaderRepository.save(partnerHeader);
-        for (PartnerHeaderTranslation translation : partnerHeader.getTranslations()) {
-            translation.setPartnerHeader(saved);
-            partnerHeaderTranslationRepository.save(translation);
-        }
         response.setData(saved);
         return ResponseEntity.ok(response);
     }
 
-    public ResponseEntity<ApiResponse<PartnerHeaderDTO>> find(String lang) {
-        ApiResponse<PartnerHeaderDTO> response = new ApiResponse<>();
-        PartnerHeader header = partnerHeaderRepository.findAll()
-                .stream()
-                .findFirst()
-                .orElseThrow(() -> new NotFoundException("Header not found"));
-        response.setData(new PartnerHeaderDTO(header, lang));
-        return ResponseEntity.ok(response);
-    }
+    public ResponseEntity<ApiResponse<?>> get(String lang) {
 
-    public ResponseEntity<ApiResponse<PartnerHeader>> findFullData() {
-        ApiResponse<PartnerHeader> response = new ApiResponse<>();
-        PartnerHeader header = partnerHeaderRepository.findAll()
-                .stream()
-                .findFirst()
-                .orElseThrow(() -> new NotFoundException("Header not found"));
-        response.setData(header);
-        return ResponseEntity.ok(response);
+        if (lang != null) {
+            ApiResponse<PartnerHeaderDTO> response = new ApiResponse<>();
+            PartnerHeader header = partnerHeaderRepository.findAll()
+                    .stream()
+                    .findFirst()
+                    .orElseThrow(() -> new NotFoundException("Header is null, or not created yet"));
+            response.setData(new PartnerHeaderDTO(header, lang));
+            response.setMessage("Language: " + lang);
+            return ResponseEntity.ok(response);
+        } else {
+            ApiResponse<PartnerHeader> response = new ApiResponse<>();
+            PartnerHeader header = partnerHeaderRepository.findAll()
+                    .stream()
+                    .findFirst()
+                    .orElseThrow(() -> new NotFoundException("Header is null, or not created yet"));
+            response.setData(header);
+            response.setMessage("All language");
+            return ResponseEntity.ok(response);
+        }
     }
 
     public ResponseEntity<ApiResponse<PartnerHeader>> update(PartnerHeader newHeader) {
@@ -61,26 +60,29 @@ public class PartnerHeaderService {
         PartnerHeader existHeader = partnerHeaderRepository.findAll()
                 .stream()
                 .findFirst()
-                .orElseThrow(() -> new NotFoundException("Header is not found"));
+                .orElseThrow(() -> new NotFoundException("Header is null, or not created yet"));
 
-        if (newHeader.getTranslations() != null) {
-            for (PartnerHeaderTranslation newTranslation : newHeader.getTranslations()) {
-                PartnerHeaderTranslation existTranslation = existHeader.getTranslations()
-                        .stream()
-                        .filter(translation -> translation.getLanguage().equals(newTranslation.getLanguage()))
-                        .findFirst()
-                        .orElseThrow(null);
-                if (existTranslation != null) {
-                    if (newTranslation.getName() != null) {
-                        existTranslation.setName(newTranslation.getName());
-                    }
-                    if (newTranslation.getDescription() != null) {
-                        existTranslation.setDescription(newTranslation.getDescription());
-                    }
-                    existTranslation.setPartnerHeader(existHeader);
-                }
-            }
+        if (newHeader.getTitleUz() != null) {
+            existHeader.setTitleUz(newHeader.getTitleUz());
         }
+        if (newHeader.getTitleRu() != null) {
+            existHeader.setTitleRu(newHeader.getTitleRu());
+        }
+        if (newHeader.getTitleEn() != null) {
+            existHeader.setTitleEn(newHeader.getTitleEn());
+        }
+
+        if (newHeader.getTextUz() != null) {
+            existHeader.setTextUz(newHeader.getTextUz());
+        }
+        if (newHeader.getTextRu() != null) {
+            existHeader.setTextRu(newHeader.getTextRu());
+        }
+        if (newHeader.getTextEn() != null) {
+            existHeader.setTextEn(newHeader.getTextEn());
+        }
+
+
         PartnerHeader saved = partnerHeaderRepository.save(existHeader);
         response.setData(saved);
         return ResponseEntity.ok(response);

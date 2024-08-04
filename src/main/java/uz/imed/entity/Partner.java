@@ -26,6 +26,7 @@ public class Partner {
     @OneToOne(cascade = CascadeType.REMOVE, orphanRemoval = true)
     Photo logo;
 
+    //partner name in only one lang
     String name;
 
     @Column(length = 1000)
