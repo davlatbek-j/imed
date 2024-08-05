@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import uz.imed.entity.Client;
 import uz.imed.payload.ApiResponse;
-import uz.imed.payload.CategoryDTO;
 import uz.imed.payload.ClientDTO;
 import uz.imed.service.ClientService;
 
