@@ -47,9 +47,9 @@ public class Product
 
     String conditions;
 
-    @ManyToOne
-    @JsonProperty(value = "brand")
-    Partner partner;
+//    @ManyToOne
+//    @JsonProperty(value = "brand")
+//    Partner partner;
 
     @ManyToOne
     Catalog catalog;

@@ -25,11 +25,11 @@ public class GlobalExceptionHandler
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(e.getMessage(), null));
     }
 
-//    @ExceptionHandler(RuntimeException.class)
-//    public ResponseEntity<ApiResponse<?>> handleOtherException(RuntimeException e)
-//    {
-//        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(e.getMessage(), null));
-//    }
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ApiResponse<?>> handleOtherException(RuntimeException e)
+    {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(e.getMessage(), null));
+    }
 
     @ExceptionHandler(NoUniqueNameException.class)
     public ResponseEntity<ApiResponse<?>> handleNoUniqueNameException(NoUniqueNameException e)
