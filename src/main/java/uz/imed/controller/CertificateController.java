@@ -33,9 +33,10 @@ public class CertificateController {
 
     @GetMapping("/get-all")
     public ResponseEntity<ApiResponse<?>> findAll(
-            @RequestHeader(value = "Accept-Language") String lang
+            @RequestHeader(value = "Accept-Language", required = false) String lang,
+            @RequestParam(value = "onlyPhoto", required = false, defaultValue = "false") Boolean onlyPhoto
     ) {
-        return certificateService.findAll(lang);
+        return certificateService.findAll(lang, onlyPhoto);
     }
 
     @PutMapping("/update")

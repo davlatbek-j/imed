@@ -11,6 +11,7 @@ import uz.imed.entity.Certificate;
 import uz.imed.exception.NotFoundException;
 import uz.imed.payload.ApiResponse;
 import uz.imed.payload.CertificateDTO;
+import uz.imed.payload.CertificatePhotoDTO;
 import uz.imed.repository.CertificateRepository;
 import uz.imed.util.SlugUtil;
 
@@ -58,13 +59,19 @@ public class CertificateService {
         return ResponseEntity.ok(response);
     }
 
-    public ResponseEntity<ApiResponse<?>> findAll(String lang) {
+    public ResponseEntity<ApiResponse<?>> findAll(String lang, Boolean onlyPhoto) {
         List<Certificate> all = certificateRepository.findAll();
         if (lang == null) {
             ApiResponse<List<Certificate>> response = new ApiResponse<>();
             response.setData(new ArrayList<>());
             all.forEach(certificate -> response.getData().add(certificate));
             response.setMessage("Found " + all.size() + " certificate(s)");
+            return ResponseEntity.ok(response);
+        }
+        if (onlyPhoto){
+            ApiResponse<List<CertificatePhotoDTO>> response=new ApiResponse<>();
+            response.setData(new ArrayList<>());
+            all.forEach(certificate -> response.getData().add(new CertificatePhotoDTO(certificate)));
             return ResponseEntity.ok(response);
         }
         ApiResponse<List<CertificateDTO>> response = new ApiResponse<>();
