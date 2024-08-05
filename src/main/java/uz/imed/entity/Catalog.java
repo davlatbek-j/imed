@@ -25,5 +25,5 @@ public class Catalog
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnore
-    Category categoryItem;
+    Category category;
 }

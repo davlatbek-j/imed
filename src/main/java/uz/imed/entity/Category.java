@@ -35,8 +35,7 @@ public class Category
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     Photo photo;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "categoryItem", orphanRemoval = true)
-    @JsonProperty(value = "catalog")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "category", orphanRemoval = true)
     List<Catalog> catalogs;
 
     Boolean active = true;
@@ -47,6 +46,6 @@ public class Category
     private void setCatalogId()
     {
         if (this.catalogs != null)
-            this.catalogs.forEach(i -> i.setCategoryItem(this));
+            this.catalogs.forEach(i -> i.setCategory(this));
     }
 }

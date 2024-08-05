@@ -5,7 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import uz.imed.entity.Catalog;
 import uz.imed.entity.Category;
 import uz.imed.exception.NotFoundException;
 import uz.imed.payload.ApiResponse;
@@ -22,6 +24,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 
 @Service
+@Transactional
 public class CategoryService
 {
     private final CategoryRepository categoryRepository;
@@ -145,4 +148,84 @@ public class CategoryService
         }
     }
 
+    public ResponseEntity<ApiResponse<Category>> update(Category newCategory)
+    {
+        if (newCategory == null || newCategory.getId() == null)
+            throw new NotFoundException("Category or id is null");
+
+        Category fromDB = categoryRepository.findById(newCategory.getId()).orElseThrow(() -> new NotFoundException("Category not found by id: " + newCategory.getId()));
+        ApiResponse<Category> response = new ApiResponse<>();
+
+        if (newCategory.getNameUz() != null)
+        {
+            fromDB.setNameUz(newCategory.getNameUz());
+            fromDB.setSlug(fromDB.getId() + "-" + newCategory.getNameUz());
+        }
+        if (newCategory.getNameRu() != null)
+            fromDB.setNameRu(newCategory.getNameRu());
+        if (newCategory.getNameEn() != null)
+            fromDB.setNameEn(newCategory.getNameEn());
+
+        if (newCategory.getActive() != null)
+            fromDB.setActive(newCategory.getActive());
+
+        if (newCategory.getMain() != null)
+            fromDB.setMain(newCategory.getMain());
+
+        List<Catalog> newCatalogs = newCategory.getCatalogs();
+        List<Catalog> dbCatalogs = fromDB.getCatalogs();
+        if (newCatalogs != null)
+        {
+            for (Catalog newCatalog : newCatalogs)
+            {
+                if (newCatalog.getId() != null && dbCatalogs != null)
+                {
+                    for (Catalog dbCatalog : dbCatalogs)
+                    {
+                        if (newCatalog.getId().equals(dbCatalog.getId()))
+                        {
+                            if (newCatalog.getNameUz() != null)
+                                dbCatalog.setNameUz(newCatalog.getNameUz());
+
+                            if (newCatalog.getNameRu() != null)
+                                dbCatalog.setNameRu(newCatalog.getNameRu());
+
+                            if (newCatalog.getNameEn() != null)
+                                dbCatalog.setNameEn(newCatalog.getNameEn());
+
+                            if (newCatalog.getNameUz() == null && newCatalog.getNameRu() == null && newCatalog.getNameEn() == null)
+                            {
+                                catalogRepository.delete(newCatalog.getId());
+                            }
+
+                        }
+                    }
+                } else if (newCatalog.getNameUz() != null || newCatalog.getNameRu() != null || newCatalog.getNameEn() != null)
+                {
+                    newCatalog.setCategory(fromDB);
+                    if (dbCatalogs != null)
+                        dbCatalogs.add(newCatalog);
+                    else
+                    {
+                        dbCatalogs = new ArrayList<>();
+                        dbCatalogs.add(newCatalog);
+                    }
+                    catalogRepository.saveAndFlush(newCatalog);
+                }
+            }
+        }
+
+        response.setData(categoryRepository.saveAndFlush(fromDB));
+        response.setMessage("Updated");
+        return ResponseEntity.ok(response);
+    }
+
+    public ResponseEntity<ApiResponse<?>> delete(Long categoryId)
+    {
+        if (!categoryRepository.existsById(categoryId))
+            throw new NotFoundException("Category not found by id: " + categoryId);
+
+        categoryRepository.deleteById(categoryId);
+        return ResponseEntity.ok(new ApiResponse<>("Deleted", null));
+    }
 }
