@@ -21,10 +21,6 @@ public interface NewRepository extends JpaRepository<New, Long> {
     @Query(value = "update news set slug = :slug where id = :id", nativeQuery = true)
     void updateSlug(@Param("slug") String slug, @Param("id") Long newId);
 
-    @Query(value = "select slug from news where id = :id", nativeQuery = true)
-    String findSlugById(@Param("id") Long newId);
-
-
     @Query(value = "select * from news where slug = :slug", nativeQuery = true)
     Optional<New> findBySlug(@Param("slug") String slug);
 

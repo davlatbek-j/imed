@@ -7,14 +7,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
-
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Entity(name = "certificate")
+public class Certificate {
 
-@Entity(name = "partner")
-public class Partner {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
@@ -22,29 +21,24 @@ public class Partner {
     @Column(unique = true)
     String slug;
 
+    String titleUz;
+
+    String titleRu;
+
+    String titleEn;
+
+    @Column(length = 5000)
+    String textUz;
+
+    @Column(length = 5000)
+    String textRu;
+
+    @Column(length = 5000)
+    String textEn;
+
     @OneToOne(cascade = CascadeType.REMOVE, orphanRemoval = true)
-    Photo logo;
-
-    //partner name in only one lang
-    String name;
-
-    @Column(length = 1000)
-    String noteUz;
-    @Column(length = 1000)
-    String noteRu;
-    @Column(length = 1000)
-    String noteEn;
-
-    @Column(length = 5000)
-    String aboutUz;
-    @Column(length = 5000)
-    String aboutRu;
-    @Column(length = 5000)
-    String aboutEn;
-
-    String website;
-
-    Integer orderNum;
+    Photo photo;
 
     Boolean active;
+
 }
