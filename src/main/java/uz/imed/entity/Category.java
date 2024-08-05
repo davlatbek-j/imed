@@ -23,7 +23,9 @@ public class Category
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    String title;
+    String nameUz;
+    String nameRu;
+    String nameEn;
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Column(unique = true)
@@ -35,7 +37,7 @@ public class Category
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "categoryItem", orphanRemoval = true)
     @JsonProperty(value = "catalog")
-    List<Catalog> catalogList;
+    List<Catalog> catalogs;
 
     Boolean active = true;
 
@@ -44,7 +46,7 @@ public class Category
     @PostPersist
     private void setCatalogId()
     {
-        if (this.catalogList != null)
-            this.catalogList.forEach(i -> i.setCategoryItem(this));
+        if (this.catalogs != null)
+            this.catalogs.forEach(i -> i.setCategoryItem(this));
     }
 }

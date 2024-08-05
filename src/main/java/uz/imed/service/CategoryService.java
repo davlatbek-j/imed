@@ -7,11 +7,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import uz.imed.entity.Category;
-import uz.imed.exception.JsonParsingException;
 import uz.imed.exception.NotFoundException;
 import uz.imed.payload.ApiResponse;
-import uz.imed.payload.catalog.CategoryDTO;
-import uz.imed.payload.catalog.CategoryNameDTO;
+import uz.imed.payload.category.CategoryDTO;
+import uz.imed.payload.category.CategoryNameDTO;
 import uz.imed.repository.CatalogRepository;
 import uz.imed.repository.CategoryRepository;
 import uz.imed.util.SlugUtil;
@@ -45,7 +44,7 @@ public class CategoryService
             return ResponseEntity.ok(response);
         } catch (JsonProcessingException e)
         {
-            throw new JsonParsingException("Error parsing JSON: " + e.getMessage());
+            throw new RuntimeException("Error parsing JSON: " + e.getMessage());
         }
     }
 

@@ -19,7 +19,9 @@ public class Catalog
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    String name;
+    String nameUz;
+    String nameRu;
+    String nameEn;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnore
