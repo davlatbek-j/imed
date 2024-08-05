@@ -20,7 +20,7 @@ public class PartnerController {
 
     private final PartnerHeaderService partnerHeaderService;
 
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<ApiResponse<Partner>> create(
             @RequestParam(value = "json") String partner,
             @RequestPart(value = "photo") MultipartFile photo) {

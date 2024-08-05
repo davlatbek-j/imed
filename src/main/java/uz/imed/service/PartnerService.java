@@ -41,6 +41,7 @@ public class PartnerService {
             partner.setId(partnerRepository.save(new Partner()).getId());
             partner.setSlug(partner.getId() + "-" + SlugUtil.makeSlug(partner.getName()));
             partner.setLogo(photoService.save(logo));
+            partner.setActive(true);
 
             response.setData(partnerRepository.save(partner));
             response.setMessage("Added");
