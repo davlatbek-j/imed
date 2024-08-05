@@ -19,5 +19,6 @@ public interface CategoryRepository extends JpaRepository<Category, Long>
     List<Category> findAllByActive(Boolean active);
 
     List<Category> findAllByMain(Boolean main);
+
 }
 

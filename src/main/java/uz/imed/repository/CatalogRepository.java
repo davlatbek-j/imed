@@ -10,6 +10,8 @@ public interface CatalogRepository extends JpaRepository<Catalog, Long>
 {
     @Transactional
     @Modifying
-    @Query(value = "DELETE FROM catalog WHERE id= :id",nativeQuery = true)
+    @Query(value = "DELETE FROM catalog WHERE id= :id", nativeQuery = true)
     void delete(Long id);
+
+    Integer countByCategoryId(Long categoryId);
 }
