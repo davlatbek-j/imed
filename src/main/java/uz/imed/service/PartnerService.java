@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ import uz.imed.payload.ApiResponse;
 import uz.imed.payload.PartnerDTO;
 import uz.imed.payload.PartnerLogoNameDTO;
 import uz.imed.repository.PartnerRepository;
+import uz.imed.repository.ProductRepository;
 import uz.imed.util.SlugUtil;
 
 import java.util.ArrayList;
@@ -26,6 +29,10 @@ import java.util.List;
 @Transactional
 @RequiredArgsConstructor
 public class PartnerService {
+
+    private static final Logger logger = LoggerFactory.getLogger(CategoryService.class);
+
+    private final ProductRepository productRepository;
 
     private final PartnerRepository partnerRepository;
 
@@ -136,9 +143,17 @@ public class PartnerService {
         if (!partnerRepository.existsById(id)) {
             throw new NotFoundException("Partner is not found by id: " + id);
         }
+
+        if (productRepository.existsByPartnerId(id)){
+            Integer i = productRepository.countByPartnerId(id);
+            String s=String.format("You can't delete partner(id=%s), because inside of partner have %s product(s). Please delete or remove this product(s) other partner first,", id,i);
+            logger.info(s);
+            throw new NotFoundException(s);
+        }
         ApiResponse<Partner> response = new ApiResponse<>();
         partnerRepository.deleteById(id);
         response.setMessage("Deleted");
         return ResponseEntity.ok(response);
     }
+
 }
