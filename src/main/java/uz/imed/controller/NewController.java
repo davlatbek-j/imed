@@ -9,7 +9,7 @@ import uz.imed.payload.ApiResponse;
 import uz.imed.service.NewService;
 
 @RestController
-@RequestMapping("/api/new")
+@RequestMapping("/v1/new")
 @RequiredArgsConstructor
 public class NewController {
 

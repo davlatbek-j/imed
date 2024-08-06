@@ -9,7 +9,7 @@ import uz.imed.payload.ApiResponse;
 import uz.imed.service.EventService;
 
 @RestController
-@RequestMapping("/api/event")
+@RequestMapping("/v1/event")
 @RequiredArgsConstructor
 public class EventController {
 

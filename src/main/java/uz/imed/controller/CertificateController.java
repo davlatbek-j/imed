@@ -9,7 +9,7 @@ import uz.imed.payload.ApiResponse;
 import uz.imed.service.CertificateService;
 
 @RestController
-@RequestMapping("/api/certificate")
+@RequestMapping("/v1/certificate")
 @RequiredArgsConstructor
 public class CertificateController {
 

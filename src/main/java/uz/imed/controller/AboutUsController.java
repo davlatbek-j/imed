@@ -13,7 +13,7 @@ import uz.imed.service.AboutUsPageHeaderService;
 import uz.imed.service.AboutUsPageSectionService;
 
 @RestController
-@RequestMapping("/api/about-us")
+@RequestMapping("/v1/about-us")
 @RequiredArgsConstructor
 public class AboutUsController {
 

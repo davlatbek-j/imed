@@ -12,7 +12,7 @@ import uz.imed.service.PartnerHeaderService;
 import uz.imed.service.PartnerService;
 
 @RestController
-@RequestMapping("/api/partner")
+@RequestMapping("/v1/partner")
 @RequiredArgsConstructor
 public class PartnerController {
 
