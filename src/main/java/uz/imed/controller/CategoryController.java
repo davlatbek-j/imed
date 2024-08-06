@@ -43,4 +43,16 @@ public class CategoryController
         return categoryService.getAll(lang, main, active, onlyName);
     }
 
+    @PutMapping
+    public ResponseEntity<ApiResponse<Category>> update(
+            @RequestBody Category category)
+    {
+        return categoryService.update(category);
+    }
+
+    @DeleteMapping("/{categoryId}")
+    public ResponseEntity<ApiResponse<?>> delete(@PathVariable Long categoryId)
+    {
+        return categoryService.delete(categoryId);
+    }
 }

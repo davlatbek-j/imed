@@ -3,27 +3,37 @@ package uz.imed.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Entity(name = "catalog")
-public class Catalog
+
+@Entity
+@Table(name = "characteristic")
+public class Characteristic
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    String nameUz;
-    String nameRu;
-    String nameEn;
+    @Column(length = 500)
+    String titleUz;
+    @Column(length = 500)
+    String titleRu;
+    @Column(length = 500)
+    String titleEn;
+
+    @Column(length = 5000)
+    String valueUz;
+    @Column(length = 5000)
+    String valueRu;
+    @Column(length = 5000)
+    String valueEn;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnore
-    Category category;
+    Product product;
 }
