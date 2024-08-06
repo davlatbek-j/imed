@@ -2,7 +2,6 @@ package uz.imed.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import uz.imed.entity.Catalog;
 import uz.imed.entity.Product;
 
 import java.util.List;
@@ -24,4 +23,12 @@ public interface ProductRepository extends JpaRepository<Product, Long>
     List<Product> findAllByActive(Boolean active);
 
     List<Product> findAllByPopular(Boolean popular);
+
+    boolean existsByCategoryId(Long categoryId);
+
+    Integer countByCategoryId(Long categoryId);
+
+    boolean existsByCatalogId(Long catalogId);
+
+    Integer countByCatalogId(Long catalogId);
 }

@@ -3,18 +3,22 @@ package uz.imed.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import uz.imed.entity.Catalog;
 import uz.imed.entity.Category;
+import uz.imed.exception.NotDeleteException;
 import uz.imed.exception.NotFoundException;
 import uz.imed.payload.ApiResponse;
 import uz.imed.payload.category.CategoryDTO;
 import uz.imed.payload.category.CategoryNameDTO;
 import uz.imed.repository.CatalogRepository;
 import uz.imed.repository.CategoryRepository;
+import uz.imed.repository.ProductRepository;
 import uz.imed.util.SlugUtil;
 
 import java.util.ArrayList;
@@ -31,6 +35,9 @@ public class CategoryService
     private final CatalogRepository catalogRepository;
     private final ObjectMapper objectMapper;
     private final PhotoService photoService;
+    private final ProductRepository productRepository;
+
+    private static final Logger logger = LoggerFactory.getLogger(CategoryService.class);
 
     public ResponseEntity<ApiResponse<Category>> add(String json, MultipartFile photo)
     {
@@ -195,6 +202,13 @@ public class CategoryService
 
                             if (newCatalog.getNameUz() == null && newCatalog.getNameRu() == null && newCatalog.getNameEn() == null)
                             {
+                                if (productRepository.existsByCatalogId(newCatalog.getId()))
+                                {
+                                    Integer countByCatalogId = productRepository.countByCatalogId(newCatalog.getId());
+                                    String s = String.format("You can't delete catalog(id=%s), because inside of catalog have %s product(s). Please delete or remove this product(s) other catalog first", newCatalog.getId(), countByCatalogId);
+                                    logger.info(s);
+                                    throw new NotDeleteException(s);
+                                }
                                 catalogRepository.delete(newCatalog.getId());
                             }
 
@@ -224,6 +238,14 @@ public class CategoryService
     {
         if (!categoryRepository.existsById(categoryId))
             throw new NotFoundException("Category not found by id: " + categoryId);
+
+        if (productRepository.existsByCategoryId(categoryId))
+        {
+            Integer i = productRepository.countByCategoryId(categoryId);
+            String s = String.format("You can't delete category(id=%s), because inside of category have %s product(s). Please delete or remove this product(s) other category first", categoryId, i);
+            logger.info(s);
+            throw new NotDeleteException(s);
+        }
 
         categoryRepository.deleteById(categoryId);
         return ResponseEntity.ok(new ApiResponse<>("Deleted", null));
