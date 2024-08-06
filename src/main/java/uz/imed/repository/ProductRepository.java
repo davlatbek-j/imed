@@ -29,4 +29,12 @@ public interface ProductRepository extends JpaRepository<Product, Long>
 
     Integer countByPartnerId(Long id);
 
+
+    boolean existsByCategoryId(Long categoryId);
+
+    Integer countByCategoryId(Long categoryId);
+
+    boolean existsByCatalogId(Long catalogId);
+
+    Integer countByCatalogId(Long catalogId);
 }

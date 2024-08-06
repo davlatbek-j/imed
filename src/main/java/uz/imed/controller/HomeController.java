@@ -19,6 +19,13 @@ public class HomeController
     @GetMapping("/home")
     public ResponseEntity<String> homeApi()
     {
-        return ResponseEntity.ok().body("Everything's gonna be alright /api ...");
+        return ResponseEntity.ok().body("url: /v1/home");
     }
+
+    @GetMapping("/abc")
+    public ResponseEntity<String> homeAbc()
+    {
+        return ResponseEntity.ok().body("url: /v1/abc");
+    }
+
 }
