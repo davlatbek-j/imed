@@ -12,6 +12,13 @@ public class HomeController
     @GetMapping
     public ResponseEntity<String> home()
     {
-        return ResponseEntity.ok().body("Everything's gonna be alright...");
+        return ResponseEntity.ok().body("Everything's gonna be alright/...");
+    }
+
+
+    @GetMapping("/api")
+    public ResponseEntity<String> homeApi()
+    {
+        return ResponseEntity.ok().body("Everything's gonna be alright /api ...");
     }
 }
