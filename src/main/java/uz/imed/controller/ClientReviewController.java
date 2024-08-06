@@ -9,7 +9,7 @@ import uz.imed.payload.ApiResponse;
 import uz.imed.service.ClientReviewService;
 
 @RestController
-@RequestMapping("/api/review")
+@RequestMapping("/v1/review")
 @RequiredArgsConstructor
 public class ClientReviewController {
 

@@ -9,6 +9,8 @@ import uz.imed.entity.ClientReview;
 import uz.imed.entity.Photo;
 import uz.imed.exception.LanguageNotSupportException;
 
+import java.util.Date;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -23,10 +25,13 @@ public class ClientReviewDTO {
 
     String comment;
 
+    Date createdDate;
+
     public ClientReviewDTO(ClientReview clientReview, String lang) {
         this.id = clientReview.getId();
         this.clientName = clientReview.getClientName();
         this.logo = clientReview.getLogo();
+        this.createdDate=clientReview.getCreatedDate();
 
         switch (lang.toLowerCase()) {
 
