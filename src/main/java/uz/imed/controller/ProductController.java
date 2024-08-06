@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import uz.imed.entity.Product;
 import uz.imed.payload.ApiResponse;
-import uz.imed.payload.ProductDTO;
 import uz.imed.service.ProductService;
 
 import java.util.List;
@@ -38,7 +37,7 @@ public class ProductController
     }
 
     @GetMapping("/all")
-    public ResponseEntity<ApiResponse<List<ProductDTO>>> all(
+    public ResponseEntity<ApiResponse<?>> all(
             @RequestHeader(value = "Accept-Language") String lang,
             @RequestParam(value = "category-id", required = false) Long categoryId,
             @RequestParam(value = "catalog-id", required = false) Long catalogId,
@@ -48,6 +47,13 @@ public class ProductController
     )
     {
         return productService.all(lang, categoryId, catalogId, popular);
+    }
+
+    @PutMapping
+    public ResponseEntity<ApiResponse<Product>> update(
+            @RequestBody Product product)
+    {
+        return productService.update(product);
     }
 
     @DeleteMapping("/{id}")
