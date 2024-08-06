@@ -12,7 +12,7 @@ import uz.imed.service.CategoryService;
 @RequiredArgsConstructor
 
 @Controller
-@RequestMapping("/api/category")
+@RequestMapping("/v1/category")
 public class CategoryController
 {
     private final CategoryService categoryService;
