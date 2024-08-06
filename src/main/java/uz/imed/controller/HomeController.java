@@ -6,19 +6,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-@RequestMapping("/")
+@RequestMapping("/api")
 public class HomeController
 {
     @GetMapping
     public ResponseEntity<String> home()
     {
         return ResponseEntity.ok().body("Everything's gonna be alright/...");
-    }
-
-
-    @GetMapping("/api")
-    public ResponseEntity<String> homeApi()
-    {
-        return ResponseEntity.ok().body("Everything's gonna be alright /api ...");
     }
 }
