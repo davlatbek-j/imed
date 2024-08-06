@@ -2,13 +2,11 @@ package uz.imed.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -38,6 +36,7 @@ public class NewOption {
     Photo photo;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
     New newness;
 
     @OneToOne(fetch = FetchType.LAZY)

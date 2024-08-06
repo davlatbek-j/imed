@@ -33,9 +33,11 @@ public class ClientReviewController {
 
     @GetMapping("/get-all")
     public ResponseEntity<ApiResponse<?>> findAll(
-            @RequestHeader(value = "Accept-Language", required = false) String lang
+            @RequestHeader(value = "Accept-Language", required = false) String lang,
+            @RequestParam(value = "size", defaultValue = "10", required = false) Integer size,
+            @RequestParam(value = "page", defaultValue = "1") Integer page
     ) {
-        return clientReviewService.findAll(lang);
+        return clientReviewService.findAll(lang, page, size);
     }
 
     @PutMapping("/update")

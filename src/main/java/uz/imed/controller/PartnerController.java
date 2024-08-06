@@ -49,31 +49,31 @@ public class PartnerController {
         return partnerService.update(partner);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public ResponseEntity<ApiResponse<?>> deleteById(
             @PathVariable Long id) {
         return partnerService.delete(id);
     }
 
-    @PostMapping("/header")
+    @PostMapping("/header/create")
     public ResponseEntity<ApiResponse<PartnerHeader>> create(
             @RequestBody PartnerHeader header) {
         return partnerHeaderService.create(header);
     }
 
-    @GetMapping("/header")
+    @GetMapping("/header/get")
     public ResponseEntity<ApiResponse<?>> get(
             @RequestHeader(value = "Accept-Language", required = false) String lang) {
         return partnerHeaderService.get(lang);
     }
 
-    @PutMapping("/header")
+    @PutMapping("/header/update")
     public ResponseEntity<ApiResponse<PartnerHeader>> update(
             @RequestBody PartnerHeader header) {
         return partnerHeaderService.update(header);
     }
 
-    @DeleteMapping("/header")
+    @DeleteMapping("/header/delete")
     public ResponseEntity<ApiResponse<?>> delete() {
         return partnerHeaderService.delete();
     }

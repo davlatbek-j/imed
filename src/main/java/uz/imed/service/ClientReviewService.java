@@ -3,14 +3,19 @@ package uz.imed.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import uz.imed.entity.ClientReview;
+import uz.imed.entity.New;
 import uz.imed.exception.NotFoundException;
 import uz.imed.payload.ApiResponse;
 import uz.imed.payload.ClientReviewDTO;
+import uz.imed.payload.NewDTO;
 import uz.imed.repository.ClientReviewRepository;
 
 import java.util.ArrayList;
@@ -53,19 +58,18 @@ public class ClientReviewService {
         return ResponseEntity.ok(response);
     }
 
-    public ResponseEntity<ApiResponse<?>> findAll(String lang) {
-        List<ClientReview> all = clientReviewRepository.findAll();
+    public ResponseEntity<ApiResponse<?>> findAll(String lang, int page, int size) {
+        Pageable pageable=PageRequest.of(page-1,size);
+        Page<ClientReview> all = clientReviewRepository.findAll(pageable);
         if (lang != null) {
             ApiResponse<List<ClientReviewDTO>> response = new ApiResponse<>();
             response.setData(new ArrayList<>());
             all.forEach(clientReview -> response.getData().add(new ClientReviewDTO(clientReview, lang)));
-            response.setMessage("Found " + all.size() + " comment(s)");
             return ResponseEntity.ok(response);
         }
         ApiResponse<List<ClientReview>> response = new ApiResponse<>();
         response.setData(new ArrayList<>());
         all.forEach(clientReview -> response.getData().add(clientReview));
-        response.setMessage("Found " + all.size() + " comment(s)");
         return ResponseEntity.ok(response);
     }
 

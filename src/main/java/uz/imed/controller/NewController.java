@@ -26,11 +26,33 @@ public class NewController {
     @GetMapping("/get/{slug}")
     public ResponseEntity<ApiResponse<?>> findBySlug(
             @PathVariable String slug,
-            @RequestHeader(value = "Accept-Language",required = false) String lang
-    ){
+            @RequestHeader(value = "Accept-Language", required = false) String lang
+    ) {
         return newService.findBySlug(slug, lang);
     }
 
+    @GetMapping("/get-all")
+    public ResponseEntity<ApiResponse<?>> findAll(
+            @RequestHeader(value = "Accept-Language", required = false) String lang,
+            @RequestParam(value = "size", defaultValue = "10", required = false) Integer size,
+            @RequestParam(value = "page", defaultValue = "1") Integer page
+    ) {
+        return newService.findAllByPageNation(lang, page, size);
+    }
+
+    @PutMapping("/update")
+    public ResponseEntity<ApiResponse<New>> update(
+            @RequestBody New newness
+    ) {
+        return newService.update(newness);
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<ApiResponse<?>> delete(
+            @PathVariable Long id
+    ) {
+        return newService.delete(id);
+    }
 
 
 }

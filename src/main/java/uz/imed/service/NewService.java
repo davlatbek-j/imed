@@ -2,6 +2,7 @@ package uz.imed.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -22,6 +23,7 @@ import uz.imed.util.SlugUtil;
 import java.util.*;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class NewService {
 
