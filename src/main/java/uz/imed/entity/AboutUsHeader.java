@@ -39,6 +39,8 @@ public class AboutUsHeader extends BaseEntity{
 
     String descriptionEng;
 
+    String slug;
+
     @OneToOne
     Photo photo;
 

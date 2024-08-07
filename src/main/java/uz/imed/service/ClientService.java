@@ -57,7 +57,18 @@ public class ClientService {
     }
 
 
-    public ResponseEntity<ApiResponse<ClientDTO>> getById(Long id, String lang) {
+    public ResponseEntity<ApiResponse<?>> getById(Long id, String lang) {
+
+
+        if (lang == null) {
+            ApiResponse<Client> response = new ApiResponse<>();
+            Optional<Client> bySlugIgnoreCase = clientRepository.findById(id);
+            Client client = bySlugIgnoreCase.orElseThrow(() -> new NotFoundException("Client not found by : " + id));
+            response.setData(client);
+            response.setMessage("Found all client(s)");
+            return ResponseEntity.ok(response);
+        }
+
         ApiResponse<ClientDTO> response = new ApiResponse<>();
 
         if (!clientRepository.existsById(id)) {
@@ -71,7 +82,16 @@ public class ClientService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    public ResponseEntity<ApiResponse<List<ClientDTO>>> findAll(String lang) {
+    public ResponseEntity<ApiResponse<?>> findAll(String lang) {
+
+        if (lang == null) {
+            ApiResponse<List<Client>> response = new ApiResponse<>();
+            List<Client> clients = clientRepository.findAll();
+            response.setData(clients);
+            response.setMessage("Found all client(s)");
+            return ResponseEntity.ok(response);
+        }
+
         ApiResponse<List<ClientDTO>> response = new ApiResponse<>();
         List<Client> clients = clientRepository.findAll();
         response.setMessage("Found " + clients.size() + " client(s)");
@@ -150,49 +170,6 @@ public class ClientService {
         }
     }
 
-    public ResponseEntity<ApiResponse<Client>> updatePhoto(Long id, MultipartFile icon, List<MultipartFile> newGallery) {
-
-        ApiResponse<Client> response = new ApiResponse<>();
-
-
-        if (!(icon.getContentType().equals("image/png") ||
-                icon.getContentType().equals("image/svg+xml"))) {
-            response.setMessage("Invalid file , only image/png or image/svg+xml");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
-        if (!clientRepository.existsById(id)) {
-            if (!clientRepository.existsById(id)) {
-                response.setMessage("Client with id " + id + " does not exist");
-                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-            }
-        }
-        Client client = clientRepository.findById(id).get();
-
-        Photo oldIcon = client.getIcon();
-        List<Photo> oldGallery = client.getGallery();
-
-        if (icon == null || icon.isEmpty())
-            client.setIcon(oldIcon);
-        else
-            client.setIcon(photoService.save(icon));
-
-        if (newGallery == null || newGallery.get(0).isEmpty())
-            client.setGallery(oldGallery);
-        else {
-            client.setGallery(new ArrayList<>());
-            for (MultipartFile multipartFile : newGallery)
-                if (multipartFile.getSize() > 0)
-                    client.getGallery().add(photoService.save(multipartFile));
-        }
-
-
-        client.setId(id);
-        Client save = clientRepository.save(client);
-
-        response.setMessage("Successfully updated");
-        response.setData(save);
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
 
     public ResponseEntity<ApiResponse<Client>> delete(Long id) {
         ApiResponse<Client> response = new ApiResponse<>();

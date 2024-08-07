@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import uz.imed.entity.AboutUsChooseUs;
 import uz.imed.entity.AboutUsHeader;
+import uz.imed.exeptions.NotFoundException;
 import uz.imed.payload.AboutUsChooseUsDTO;
 import uz.imed.payload.AboutUsHeaderDTO;
 import uz.imed.payload.ApiResponse;
@@ -24,84 +25,100 @@ public class AboutUsHeaderService {
 
     private final AboutUsHeaderRepository aboutUsHeaderRepository;
 
+    private final ObjectMapper objectMapper;
 
     private final PhotoService photoService;
 
-    public ResponseEntity<ApiResponse<AboutUsHeader>> create(AboutUsHeader entity) {
-        ApiResponse<AboutUsHeader> response = new ApiResponse<>();
-        AboutUsHeader aboutUsHeader = new AboutUsHeader();
-
-        aboutUsHeader.setFormName(entity.getFormName());
-        aboutUsHeader.setTitleUz(entity.getTitleUz());
-        aboutUsHeader.setTitleRu(entity.getTitleRu());
-        aboutUsHeader.setTitleEng(entity.getTitleEng());
-        aboutUsHeader.setSubtitleUz(entity.getSubtitleUz());
-        aboutUsHeader.setSubtitleRu(entity.getSubtitleRu());
-        aboutUsHeader.setSubtitleEng(entity.getSubtitleEng());
-        aboutUsHeader.setDescriptionUz(entity.getDescriptionUz());
-        aboutUsHeader.setDescriptionRu(entity.getDescriptionRu());
-        aboutUsHeader.setDescriptionEng(entity.getDescriptionEng());
-
-        AboutUsHeader saved = aboutUsHeaderRepository.save(aboutUsHeader);
-        response.setMessage("Successfully created");
-        response.setData(saved);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
-    }
-
-    public ResponseEntity<ApiResponse<AboutUsHeader>> uploadImage(Long id, MultipartFile file) {
+    public ResponseEntity<ApiResponse<AboutUsHeader>> create(String json,MultipartFile file) {
         ApiResponse<AboutUsHeader> response = new ApiResponse<>();
 
-        if (!(file.getContentType().equals("image/png") ||
-                file.getContentType().equals("image/svg+xml"))) {
-            response.setMessage("Invalid file , only image/png or image/svg+xml");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        try {
+            AboutUsHeader aboutUsHeader = objectMapper.readValue(json, AboutUsHeader.class);
+            Long id = aboutUsHeaderRepository.save(new AboutUsHeader()).getId();
+            aboutUsHeader.setId(id);
+            aboutUsHeader.setPhoto(photoService.save(file));
+            aboutUsHeader.setSlug(id + "-" + aboutUsHeader.getTitleUz());
+            AboutUsHeader saved = aboutUsHeaderRepository.save(aboutUsHeader);
+            response.setMessage("Successfully created");
+            response.setData(saved);
+            return new ResponseEntity<>(response, HttpStatus.CREATED);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
         }
 
-        if (!aboutUsHeaderRepository.existsById(id)) {
-            response.setMessage("Data with id " + id + " does not exist");
-            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-        }
-        AboutUsHeader aboutUsHeader = aboutUsHeaderRepository.findById(id).get();
-        response.setMessage("Found data with id " + id);
-        aboutUsHeader.setPhoto(photoService.save(file));
-        AboutUsHeader saved = aboutUsHeaderRepository.save(aboutUsHeader);
-        response.setMessage("Successfully created");
-        response.setData(saved);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    public ResponseEntity<ApiResponse<AboutUsHeaderDTO>> getById(Long id, String lang) {
+    public ResponseEntity<ApiResponse<?>> getById(Long id, String lang) {
+        if (lang == null) {
+            ApiResponse<AboutUsHeader> response = new ApiResponse<>();
+            Optional<AboutUsHeader> byId = aboutUsHeaderRepository.findById(id);
+            AboutUsHeader aboutUsHeader = byId.orElseThrow(() -> new NotFoundException("Data not found by id : " + id));
+            response.setData(aboutUsHeader);
+            response.setMessage("Found all data");
+            return ResponseEntity.ok(response);
+        }
+
         ApiResponse<AboutUsHeaderDTO> response = new ApiResponse<>();
-        if (!aboutUsHeaderRepository.existsById(id)) {
-            response.setMessage("Data with id " + id + " does not exist");
-            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-        }
-        AboutUsHeader aboutUsHeader = aboutUsHeaderRepository.findById(id).get();
-        response.setMessage("Found data with id " + id);
-
+        Optional<AboutUsHeader> byId = aboutUsHeaderRepository.findById(id);
+        AboutUsHeader aboutUsHeader = byId.orElseThrow(() -> new NotFoundException("data not found by slug : " + id));
         response.setData(new AboutUsHeaderDTO(aboutUsHeader, lang));
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        response.setMessage("Found in language : " + lang);
+        return ResponseEntity.ok(response);
     }
 
-    public ResponseEntity<ApiResponse<List<AboutUsHeaderDTO>>> findAll(String lang) {
-        ApiResponse<List<AboutUsHeaderDTO>> response = new ApiResponse<>();
-        List<AboutUsHeader> articles = aboutUsHeaderRepository.findAll();
-        response.setMessage("Found " + articles.size() + " article(s)");
-        response.setData(new ArrayList<>());
-        articles.forEach(i -> response.getData().add(new AboutUsHeaderDTO(i, lang)));
+    public ResponseEntity<ApiResponse<?>> findAll(String lang) {
 
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-
-    public ResponseEntity<ApiResponse<AboutUsHeader>> update(Long id, AboutUsHeader newAboutUsHeader) {
-        ApiResponse<AboutUsHeader> response = new ApiResponse<>();
-        Optional<AboutUsHeader> optionalAboutUsHeader = aboutUsHeaderRepository.findAll().stream().findFirst();
-        if (optionalAboutUsHeader.isEmpty()) {
-            response.setMessage("AboutUsHeader is not found");
-            return ResponseEntity.status(404).body(response);
+        if (lang == null) {
+            ApiResponse<List<AboutUsHeader>> response = new ApiResponse<>();
+            List<AboutUsHeader> all = aboutUsHeaderRepository.findAll();
+            response.setMessage("Found " + all.size() + " data");
+            response.setData(all);
+            return new ResponseEntity<>(response, HttpStatus.OK);
         }
-        AboutUsHeader newentity = aboutUsHeaderRepository.findById(id).get();
+
+        ApiResponse<List<AboutUsHeaderDTO>> response = new ApiResponse<>();
+        List<AboutUsHeader> all = aboutUsHeaderRepository.findAll();
+        response.setMessage("Found " + all.size() + " data");
+        response.setData(new ArrayList<>());
+        all.forEach(i -> response.getData().add(new AboutUsHeaderDTO(i, lang)));
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    public ResponseEntity<ApiResponse<?>> get(String slug, String lang) {
+        if (lang == null) {
+            ApiResponse<AboutUsHeader> response = new ApiResponse<>();
+            Optional<AboutUsHeader> bySlugIgnoreCase = aboutUsHeaderRepository.findBySlugIgnoreCase(slug);
+            AboutUsHeader certificate = bySlugIgnoreCase.orElseThrow(() -> new NotFoundException("Data not found by slug : " + slug));
+            response.setData(certificate);
+            response.setMessage("Found all data");
+            return ResponseEntity.ok(response);
+        }
+
+        ApiResponse<AboutUsHeaderDTO> response = new ApiResponse<>();
+        Optional<AboutUsHeader> bySlugIgnoreCase = aboutUsHeaderRepository.findBySlugIgnoreCase(slug);
+        AboutUsHeader certificate = bySlugIgnoreCase.orElseThrow(() -> new NotFoundException("Data not found by slug : " + slug));
+        response.setData(new AboutUsHeaderDTO(certificate, lang));
+        response.setMessage("Found in language : " + lang);
+        return ResponseEntity.ok(response);
+
+    }
+
+
+    public ResponseEntity<ApiResponse<AboutUsHeader>> update(String json) {
+
+
+        try {
+            AboutUsHeader newAboutUsHeader = objectMapper.readValue(json, AboutUsHeader.class);
+            Long id = newAboutUsHeader.getId();
+
+            ApiResponse<AboutUsHeader> response = new ApiResponse<>();
+            if (!aboutUsHeaderRepository.existsById(id)) {
+                response.setMessage("Data with id " + id + " does not exist");
+                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+            }
+
+            AboutUsHeader newentity = aboutUsHeaderRepository.findById(id).get();
 
         if (newAboutUsHeader.getTitleUz() != null ) {
             newentity.setTitleUz(newAboutUsHeader.getTitleUz());
@@ -142,34 +159,13 @@ public class AboutUsHeaderService {
         response.setMessage("Successfully updated");
         response.setData(save);
         return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public ResponseEntity<ApiResponse<AboutUsHeader>> updateImage(Long id, MultipartFile file) {
-        ApiResponse<AboutUsHeader> response = new ApiResponse<>();
 
-
-        if (!(file.getContentType().equals("image/png") ||
-                file.getContentType().equals("image/svg+xml"))) {
-            response.setMessage("Invalid file , only image/png or image/svg+xml");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
-        if (!aboutUsHeaderRepository.existsById(id)) {
-            if (!aboutUsHeaderRepository.existsById(id)) {
-                response.setMessage("Article with id " + id + " does not exist");
-                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-            }
-        }
-        AboutUsHeader aboutUsHeader = aboutUsHeaderRepository.findById(id).get();
-        if (file != null ){
-            aboutUsHeader.setPhoto(photoService.save(file));
-        }
-        aboutUsHeader.setId(id);
-        AboutUsHeader save = aboutUsHeaderRepository.save(aboutUsHeader);
-
-        response.setMessage("Successfully updated");
-        response.setData(save);
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
 
     public ResponseEntity<ApiResponse<?>> delete() {
         ApiResponse<?> response = new ApiResponse<>();

@@ -4,171 +4,112 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import uz.imed.entity.AboutUsCertificates;
+import uz.imed.entity.Certificate;
 import uz.imed.entity.AboutUsChooseUs;
 import uz.imed.entity.AboutUsHeader;
-import uz.imed.entity.AboutUsPartner;
+
 import uz.imed.payload.AboutUsChooseUsDTO;
 import uz.imed.payload.AboutUsHeaderDTO;
 import uz.imed.payload.ApiResponse;
-import uz.imed.service.AboutUsCertificatesService;
 import uz.imed.service.AboutUsChooseUsService;
 import uz.imed.service.AboutUsHeaderService;
-import uz.imed.service.AboutUsPartnerService;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/about-us")
+@RequestMapping("/api/about-us")
 @RequiredArgsConstructor
 public class AboutUsPageController {
 
-    private final AboutUsHeaderService aboutUsHeaderService;
-
-    private final AboutUsPartnerService aboutUsPartnerService;
 
     private final AboutUsChooseUsService aboutUsChooseUsService;
 
-    private final AboutUsCertificatesService aboutUsCertificaresService;
-
+    private final AboutUsHeaderService aboutUsHeaderService;
 
 
 
 
     @PostMapping("/header/create")
     public ResponseEntity<ApiResponse<AboutUsHeader>> createAboutUsHeader(
-            @RequestBody AboutUsHeader aboutUsHeader
-    ) {return aboutUsHeaderService.create(aboutUsHeader);
+            @RequestParam("json") String json,
+            @RequestParam("photo") MultipartFile file
+    ) {return aboutUsHeaderService.create(json,file);
     }
 
-@PostMapping("/upload-image")
-public  ResponseEntity<ApiResponse<AboutUsHeader>> uploadImage(
-        @RequestParam(name = "id") Long id,
-        @RequestParam(name = "photo") MultipartFile file
-){
-        return aboutUsHeaderService.uploadImage(id,file);
-}
 
     @GetMapping("/header/get-all")
-    public ResponseEntity<ApiResponse<List<AboutUsHeaderDTO>>> findAllAboutUsHeader(
-            @RequestHeader(value = "Accept-Language", defaultValue = "ru") String lang) {
+    public ResponseEntity<ApiResponse<?>> findAllAboutUsHeader(
+            @RequestHeader(value = "Accept-Language", required = false) String lang) {
         return aboutUsHeaderService.findAll(lang);
     }
 
     @GetMapping("/header/get-by-id/{id}")
-    public ResponseEntity<ApiResponse<AboutUsHeaderDTO>> findAboutUsHeaderById(
+    public ResponseEntity<ApiResponse<?>> findAboutUsHeaderById(
             @PathVariable Long id,
-            @RequestHeader(value = "Accept-Language", defaultValue = "ru") String lang) {
+            @RequestHeader(value = "Accept-Language", required = false) String lang) {
         return aboutUsHeaderService.getById(id,lang);
     }
 
-    @PutMapping("/header/update/{id}")
-    public ResponseEntity<ApiResponse<AboutUsHeader>> updateAboutUsHeader(
-            @PathVariable Long id,
-            @RequestBody AboutUsHeader aboutUsHeader
-    ) {
-        return aboutUsHeaderService.update(id,aboutUsHeader);
+    @GetMapping("/header/by-slug/{slug}")
+    public ResponseEntity<ApiResponse<?>> getBySlug(
+            @PathVariable(name = "slug") String slug,
+            @RequestHeader(value = "Accept-Language", required = false) String lang
+
+    ){
+        return aboutUsHeaderService.get(slug,lang);
     }
 
-    @PutMapping("/header/update/image/{id}")
-    public ResponseEntity<ApiResponse<AboutUsHeader>> updateImage(
-            @PathVariable Long id,
-            @RequestParam(name = "photo") MultipartFile file
-    ){
-        return aboutUsHeaderService.updateImage(id,file);
+    @PutMapping("/header/update")
+    public ResponseEntity<ApiResponse<AboutUsHeader>> updateAboutUsHeader(
+            @RequestParam("json") String json
+    ) {
+        return aboutUsHeaderService.update(json);
     }
 
     @DeleteMapping("/header/delete")
-    public ResponseEntity<ApiResponse<?>> deleteAboutUsHeader() {
+
+    public ResponseEntity<ApiResponse<?>> delete()
+    {
         return aboutUsHeaderService.delete();
     }
 
-    @PostMapping("/partner-service/create")
-    public ResponseEntity<ApiResponse<AboutUsPartner>> createPartnerService(
-            @RequestBody AboutUsPartner partner
-
-    ) {
-        return aboutUsPartnerService.create(partner);
-    }
-
-    @PostMapping("/partner-service/upload-image")
-    public ResponseEntity<ApiResponse<AboutUsPartner>> uploadPartnerIcon(
-            @RequestParam(name = "id") Long id,
-            @RequestPart(value = "icon") MultipartFile icon
-    ){
-        return aboutUsPartnerService.uploadImage(id,icon);
-    }
-
-    @GetMapping("/partner-service/get/{id}")
-    public ResponseEntity<ApiResponse<AboutUsPartner>> findByIdPartner(
-            @PathVariable Long id
-    ) {
-        return aboutUsPartnerService.findById(id);
-    }
-
-    @GetMapping("/partner-service/get-all")
-    public ResponseEntity<ApiResponse<List<AboutUsPartner>>> findAllPartnerTask() {
-        return aboutUsPartnerService.findAll();
-    }
-
-    @PutMapping("/partner-service/update/{id}")
-    public ResponseEntity<ApiResponse<AboutUsPartner>> updatePartnerTask(
-            @PathVariable Long id,
-            @RequestBody AboutUsPartner partner
-    ) {
-        return aboutUsPartnerService.update(id, partner);
-    }
-
-    @PutMapping("/partner-service/update-icon/{id}")
-    public ResponseEntity<ApiResponse<AboutUsPartner>> updateIcon(
-            @PathVariable Long id,
-            @RequestPart(value = "icon") MultipartFile icon
-    ){
-        return aboutUsPartnerService.updateIcon(id,icon);
-    }
-
-    @PutMapping("/partner-service/change-active/{id}")
-    public ResponseEntity<ApiResponse<?>> changeActivePartnerTask(
-            @PathVariable Long id
-    ) {
-        return aboutUsPartnerService.changeActive(id);
-    }
-
-    @DeleteMapping("/partner-service/delete/{id}")
-    public ResponseEntity<ApiResponse<?>> deletePartnerTask(
-            @PathVariable Long id
-    ) {
-        return aboutUsPartnerService.delete(id);
-    }
 
     @PostMapping("/choose-us/create")
     public ResponseEntity<ApiResponse<AboutUsChooseUs>> createChooseUs(
-            @RequestBody AboutUsChooseUs aboutUsChooseUs
+            @RequestParam("json") String json
     ) {
-        return aboutUsChooseUsService.create(aboutUsChooseUs);
+        return aboutUsChooseUsService.create(json);
     }
 
     @GetMapping("/choose-us/get/{id}")
-    public ResponseEntity<ApiResponse<AboutUsChooseUsDTO>> getByIdChooseUs(
+    public ResponseEntity<ApiResponse<?>> getByIdChooseUs(
             @PathVariable Long id,
-            @RequestHeader(value = "Accept-Language", defaultValue = "ru") String lang
+            @RequestHeader(value = "Accept-Language", required = false) String lang
     ) {
         return aboutUsChooseUsService.getById(id,lang);
     }
 
     @GetMapping("/choose-us/get-all")
-    public ResponseEntity<ApiResponse<List<AboutUsChooseUsDTO>>> findAllChooseUs(
-            @RequestHeader(value = "Accept-Language", defaultValue = "ru") String lang
+    public ResponseEntity<ApiResponse<?>> findAllChooseUs(
+            @RequestHeader(value = "Accept-Language", required = false) String lang
     ) {
         return aboutUsChooseUsService.findAll(lang);
     }
 
-    @PutMapping("/choose-us/update/{id}")
+    @GetMapping("/choose-us/by-slug/{slug}")
+    public ResponseEntity<ApiResponse<?>> getBySlugCh(
+            @PathVariable(name = "slug") String slug,
+            @RequestHeader(value = "Accept-Language", required = false) String lang
+
+    ){
+        return aboutUsChooseUsService.get(slug,lang);
+    }
+
+    @PutMapping("/choose-us/update")
     public ResponseEntity<ApiResponse<AboutUsChooseUs>> update(
-            @PathVariable Long id,
-            @RequestBody AboutUsChooseUs aboutUsChooseUs
+            @RequestParam("json") String json
     ) {
-        return aboutUsChooseUsService.update(id, aboutUsChooseUs);
+        return aboutUsChooseUsService.update(json);
     }
 
     @DeleteMapping("/choose-us/delete/{id}")
@@ -178,37 +119,7 @@ public  ResponseEntity<ApiResponse<AboutUsHeader>> uploadImage(
         return aboutUsChooseUsService.delete(id);
     }
 
-    @PostMapping("/create/us-certificate")
-    public ResponseEntity<ApiResponse<AboutUsCertificates>> create(
-            @RequestParam(name = "photo") MultipartFile file
-    ){
-        return aboutUsCertificaresService.create(file);
-    }
 
-    @GetMapping("/get-all")
-    public ResponseEntity<ApiResponse<List<AboutUsCertificates>>> getAll(){
-        return aboutUsCertificaresService.findAll();
-    }
 
-    @GetMapping("/get/{id}")
-    public ResponseEntity<ApiResponse<AboutUsCertificates>> getById(
-            @PathVariable Long id
-    ){
-        return aboutUsCertificaresService.findById(id);
-    }
 
-    @PutMapping("/update/{id}")
-    private ResponseEntity<ApiResponse<AboutUsCertificates>> update(
-            @PathVariable Long id,
-            @RequestParam MultipartFile photo
-    ){
-        return aboutUsCertificaresService.update(id,photo);
-    }
-
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<ApiResponse<?>> deleteCertificates(
-            @PathVariable Long id
-    ){
-        return aboutUsCertificaresService.delete(id);
-    }
 }
