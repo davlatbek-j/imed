@@ -6,58 +6,63 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import uz.imed.entity.Client;
 import uz.imed.payload.ApiResponse;
-import uz.imed.payload.ClientDTO;
 import uz.imed.service.ClientService;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/client")
+@RequestMapping("/v1/client")
 @RequiredArgsConstructor
-public class ClientController {
+public class ClientController
+{
     private final ClientService clientService;
 
-    @PostMapping("/create")
+    @PostMapping
     public ResponseEntity<ApiResponse<Client>> create(
             @RequestParam("json") String json,
-            @RequestParam("icon") MultipartFile icon,
-            @RequestParam("gallery") List<MultipartFile> gallery
-    ) {
+            @RequestParam("logo") MultipartFile icon,
+            @RequestParam("gallery") List<MultipartFile> gallery)
+    {
         return clientService.create(json, icon, gallery);
     }
 
 
-    @GetMapping("/get/{id}")
-    public ResponseEntity<ApiResponse<?>> findById(
-            @PathVariable Long id,
-            @RequestHeader(value = "Accept-Language", required = false) String lang) {
-        return clientService.getById(id, lang);
-    }
+//    @GetMapping("/get/{id}")
+//    public ResponseEntity<ApiResponse<?>> findById(
+//            @PathVariable Long id,
+//            @RequestHeader(value = "Accept-Language", required = false) String lang) {
+//        return clientService.getById(id, lang);
+//    }
 
-    @GetMapping("/get-all")
+    @GetMapping("/all")
     public ResponseEntity<ApiResponse<?>> findAll(
-            @RequestHeader(value = "Accept-Language", required = false) String lang) {
-        return clientService.findAll(lang);
+            @RequestHeader(value = "Accept-Language") String lang,
+            @RequestParam(value = "page", required = false, defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "12") int size)
+    {
+        return clientService.findAll(lang, page, size);
     }
 
-    @GetMapping("/get_by_slug/{slug}")
+    @GetMapping("/{slug}")
     public ResponseEntity<ApiResponse<?>> getBySlug(
+            @RequestHeader(value = "Accept-Language", required = false) String lang,
             @PathVariable String slug,
-            @RequestHeader(value = "Accept-Language",required = false) String lang) {
-        return clientService.get(slug, lang);
+            @RequestParam(value = "gallery-size", required = false, defaultValue = "6") int gallerySize)
+    {
+        return clientService.get(slug, lang, gallerySize);
     }
 
     @PutMapping("/update")
     public ResponseEntity<ApiResponse<Client>> update(
-            @RequestParam("json") String json) {
-        return clientService.update(json);
+            @RequestBody Client client)
+    {
+        return clientService.update(client);
     }
 
 
-
-
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<ApiResponse<Client>> delete(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Client>> delete(@PathVariable Long id)
+    {
         return clientService.delete(id);
     }
 

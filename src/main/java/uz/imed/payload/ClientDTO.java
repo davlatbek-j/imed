@@ -15,7 +15,8 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ClientDTO {
+public class ClientDTO
+{
 
     Long id;
 
@@ -29,40 +30,42 @@ public class ClientDTO {
 
     List<PhotoDTO> gallery;
 
-    public ClientDTO(Client client,String lang){
-
-        this.id=client.getId();
-        this.locationUrl=client.getLocationUrl();
-        this.icon=new PhotoDTO(client.getIcon());
-        this.gallery=new ArrayList<>();
+    public ClientDTO(Client client, String lang)
+    {
+        this.id = client.getId();
+        this.locationUrl = client.getLocationUrl();
+        this.icon = new PhotoDTO(client.getLogo());
+        this.gallery = new ArrayList<>();
         client.getGallery().forEach(i -> this.gallery.add(new PhotoDTO(i)));
+        this.name = client.getName();
 
         switch (lang.toLowerCase())
         {
-            case "uz":
-            {
-                this.name = client.getNameUz();
-                this.description=client.getDescriptionUz();
-                break;
-            }
-            case "ru":
-            {
-                this.name = client.getNameRu();
-                this.description=client.getDescriptionRu();
-                break;
-            }
-            case "eng":
-            {
-                this.name = client.getNameEng();
-                this.description=client.getDescriptionEng();
-                break;
-            }
-            default:
-                throw new LanguageNotSupportException("Language not supported: " + lang);
+            case "uz" -> this.description = client.getDescriptionUz();
+            case "ru" -> this.description = client.getDescriptionRu();
+            case "en" -> this.description = client.getDescriptionEn();
+            default -> throw new LanguageNotSupportException("Language not supported: " + lang);
         }
     }
 
+    public ClientDTO(Client entity, String lang, int gallerySize)
+    {
+        this.id = entity.getId();
+        this.name = entity.getName();
+        this.locationUrl = entity.getLocationUrl();
+        this.icon = new PhotoDTO(entity.getLogo());
+        this.gallery = new ArrayList<>();
 
+        int originalSize = entity.getGallery().size();
+        for (int i = 0; i < originalSize && i < gallerySize; i++)
+            this.gallery.add(new PhotoDTO(entity.getGallery().get(i)));
 
-
+        switch (lang.toLowerCase())
+        {
+            case "uz" -> this.description = entity.getDescriptionUz();
+            case "ru" -> this.description = entity.getDescriptionRu();
+            case "en" -> this.description = entity.getDescriptionEn();
+            default -> throw new LanguageNotSupportException("Language not supported: " + lang);
+        }
+    }
 }
