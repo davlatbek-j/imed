@@ -1,4 +1,4 @@
-package uz.imed.controller;
+package uz.imed.config;
 
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
