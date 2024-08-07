@@ -31,12 +31,13 @@ public class ProductController
     @GetMapping("/{slug}")
     public ResponseEntity<ApiResponse<?>> get(
             @RequestHeader(value = "Accept-Language", required = false) String lang,
-            @PathVariable("slug") String slug)
+            @PathVariable("slug") String slug,
+            @RequestParam(value = "similar", required = false, defaultValue = "false") boolean similar)
     {
-        return productService.get(slug, lang);
+        return productService.get(slug, lang, similar);
     }
 
-    @GetMapping("/all")
+    @GetMapping
     public ResponseEntity<ApiResponse<?>> all(
             @RequestHeader(value = "Accept-Language") String lang,
             @RequestParam(value = "category-id", required = false) Long categoryId,

@@ -17,6 +17,8 @@ public class PhotoDTO
 
     public PhotoDTO(Photo entity)
     {
+        if (entity == null)
+            return;
         this.id = entity.getId();
         this.url = entity.getHttpUrl();
     }

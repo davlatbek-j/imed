@@ -90,9 +90,23 @@ public class ProductService
         }
     }
 
-    public ResponseEntity<ApiResponse<?>> get(String slug, String lang)
+    public ResponseEntity<ApiResponse<?>> get(String slug, String lang, boolean similar)
     {
         Product product = productRepo.findBySlug(slug).orElseThrow(() -> new NotFoundException("Product not not found by slug:" + slug));
+
+        if (similar && lang != null)
+        {
+            ApiResponse<List<ProductMainDataDTO>> response = new ApiResponse<>();
+            Category category = product.getCategory();
+            List<Product> list = productRepo.findAllByCategoryId(category.getId());
+            list.removeIf(i -> i.getId().equals(product.getId()));
+
+            response.setData(new ArrayList<>());
+            list.forEach(i -> response.getData().add(new ProductMainDataDTO(i, lang)));
+            response.setMessage("Similar products");
+            return ResponseEntity.status(200).body(response);
+        }
+
         if (lang == null)
         {
             ApiResponse<Product> response = new ApiResponse<>();

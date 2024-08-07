@@ -82,7 +82,7 @@ public class CategoryService
     public ResponseEntity<ApiResponse<?>> getAll(String lang, Boolean main, Boolean active, boolean onlyName)
     {
         if (onlyName && lang == null)
-            throw new NotFoundException("When you need only name of categories, you must send language also");
+            throw new NotFoundException("When you need only name of categories, you must send 'Accept-Language' also");
 
         if (lang == null)
         {
@@ -102,7 +102,6 @@ public class CategoryService
 
         } else if (onlyName)
         {
-            System.err.println("Only name ----------------- ");
             ApiResponse<List<CategoryNameDTO>> response = new ApiResponse<>();
             response.setData(new ArrayList<>());
 

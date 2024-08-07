@@ -19,6 +19,8 @@ public class CategoryNameDTO
 {
     Long id;
 
+    String slug;
+
     String name;
 
     List<CatalogNameDTO> catalogs;
@@ -28,6 +30,7 @@ public class CategoryNameDTO
         if (entity != null)
         {
             this.id = entity.getId();
+            this.slug = entity.getSlug();
             switch (lang.toLowerCase())
             {
                 case "uz" -> this.name = entity.getNameUz();
