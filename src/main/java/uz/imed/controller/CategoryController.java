@@ -2,53 +2,46 @@ package uz.imed.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import uz.imed.entity.Category;
-import uz.imed.entity.CategoryItem;
 import uz.imed.payload.ApiResponse;
-import uz.imed.payload.CategoryItemDTO;
 import uz.imed.service.CategoryService;
 
-import java.util.List;
-
-@RestController
-@RequestMapping("/category")
 @RequiredArgsConstructor
-public class CategoryController {
-    private  final CategoryService categoryService;
 
-    @PostMapping("/add-item")
-    public ResponseEntity<ApiResponse<Category>> addItem(
-            @RequestBody CategoryItem categoryItem,
-            @RequestParam(name = "photo")MultipartFile file
-            ){
-        return categoryService.addItem(categoryItem,file);
-    }
+@Controller
+@RequestMapping("/v1/category")
+public class CategoryController
+{
+    private final CategoryService categoryService;
 
-    @GetMapping
-    public ResponseEntity<ApiResponse<Category>> get(
-            @RequestParam(value = "main", required = false) Boolean main,
-            @RequestParam(value = "active", required = false) Boolean active)
+    @PostMapping
+    public ResponseEntity<ApiResponse<Category>> addCategory(
+            @RequestParam("json") String json,
+            @RequestParam("photo") MultipartFile photo)
     {
-        return categoryService.get(main, active);
+        return categoryService.add(json, photo);
     }
 
     @GetMapping("/{slug}")
-    public ResponseEntity<ApiResponse<CategoryItem>> getItem(
+    public ResponseEntity<ApiResponse<?>> getCategorySlug(
+            @RequestHeader(value = "Accept-Language", required = false) String lang,
             @PathVariable String slug)
     {
-        return categoryService.getItem(slug);
+        return categoryService.get(slug, lang);
     }
 
-    @GetMapping("name-list")
-    public ResponseEntity<ApiResponse<List<CategoryItemDTO>>> getNameList(
-            @RequestHeader(value = "Accept-Language", defaultValue = "ru") String lang
-    )
+    @GetMapping
+    public ResponseEntity<ApiResponse<?>> getAll(
+            @RequestHeader(value = "Accept-Language", required = false) String lang,
+            @RequestParam(value = "main", required = false) Boolean main,
+            @RequestParam(value = "active", required = false) Boolean active,
+            @RequestParam(value = "only-name", defaultValue = "false") boolean onlyName)
     {
-        return categoryService.getNameList(lang);
+        return categoryService.getAll(lang, main, active, onlyName);
     }
-
 
     @PutMapping
     public ResponseEntity<ApiResponse<Category>> update(
@@ -57,12 +50,9 @@ public class CategoryController {
         return categoryService.update(category);
     }
 
-    @DeleteMapping("/delete/{item-id}")
-    public ResponseEntity<ApiResponse<?>> delete(
-            @PathVariable("item-id") Long itemId)
+    @DeleteMapping("/{categoryId}")
+    public ResponseEntity<ApiResponse<?>> delete(@PathVariable Long categoryId)
     {
-        return categoryService.delete(itemId);
+        return categoryService.delete(categoryId);
     }
-
-
 }

@@ -1,7 +1,6 @@
 package uz.imed.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,22 +12,33 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(name = "certificate")
-public class Certificate extends BaseEntity{
+public class Certificate {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
+
+    @Column(unique = true)
+    String slug;
 
     String titleUz;
 
     String titleRu;
 
-    String titleEng;
+    String titleEn;
 
-    String descriptionUz;
+    @Column(length = 5000)
+    String textUz;
 
-    String descriptionRu;
+    @Column(length = 5000)
+    String textRu;
 
-    String descriptionEng;
+    @Column(length = 5000)
+    String textEn;
 
-    String slug;
+    @OneToOne(cascade = CascadeType.REMOVE, orphanRemoval = true)
+    Photo photo;
 
-    @OneToOne
-    Photo certificateImage;
+    Boolean active;
+
 }

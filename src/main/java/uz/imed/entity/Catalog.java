@@ -8,24 +8,22 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
-import java.util.List;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(name = "catalog")
-public class Catalog extends BaseEntity {
+public class Catalog
+{
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
 
     String nameUz;
-
     String nameRu;
+    String nameEn;
 
-    String nameEng;
-
-    public Catalog(Long id)
-    {
-        super(id);
-    }
-
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
+    Category category;
 }

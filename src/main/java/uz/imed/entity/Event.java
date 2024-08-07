@@ -7,8 +7,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import uz.imed.entity.translation.EventTranslation;
-
 
 import java.util.List;
 
@@ -18,25 +16,77 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(name = "event")
 public class Event {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
+    String nameUz;
+
+    String nameRu;
+
+    String nameEn;
+
     @Column(unique = true)
     String slug;
 
-    @OneToOne(cascade = CascadeType.REMOVE, orphanRemoval = true)
-    Photo coverPhoto; // Main photo
+    @OneToOne
+    @JsonProperty(value = "photo", access = JsonProperty.Access.READ_ONLY)
+    Photo photo;
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
-    List<EventTranslation> eventTranslations;
+    List<EventAbout> abouts;
 
-    String dateFrom;
-    String dateTo;
+    String organizerUz;
+
+    String organizerRu;
+
+    String organizerEn;
+
+    String countryUz;
+
+    String countryRu;
+
+    String countryEn;
+
+    String dateFromUz;
+
+    String dateFromRu;
+
+    String dateFromEn;
+
+    String dateToUz;
+
+    String dateToRu;
+
+    String dateToEn;
 
     String timeFrom;
+
     String timeTo;
 
-    String city;
+    String addressUz;
+
+    String addressEn;
+
+    String addressRu;
+
+    String participationUz;
+
+    String participationRu;
+
+    String participationEn;
+
+    String phoneNum;
+
+    String email;
+
+    @PostPersist
+    @PostUpdate
+    private void setIdToAbout() {
+        if (abouts != null) {
+            this.abouts.forEach(i -> i.setEvent(this));
+        }
+    }
 
 }

@@ -6,55 +6,56 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import uz.imed.entity.Partner;
-import uz.imed.entity.Photo;
-import uz.imed.exeptions.LanguageNotSupportException;
+import uz.imed.exception.LanguageNotSupportException;
 
+import java.util.List;
 
-@Data
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Data
 public class PartnerDTO {
+
     Long id;
-
-    String title;
-
-    String mainDescription;
-
-    String description;
-
-    PhotoDTO photoDTO;
 
     String slug;
 
-    public PartnerDTO(Partner partner,String lang) {
-        this.photoDTO = new PhotoDTO(partner.getPhoto());
-        this.slug = partner.getSlug();
-        switch (lang.toLowerCase())
-        {
-            case "uz":
-            {
-                this.title = partner.getTitleUz();
-                this.mainDescription = partner.getMainDescriptionUz();
-                this.description=partner.getDescriptionUz();
-                break;
+    PhotoDTO logo;
+
+    String name;
+
+    String note;
+
+    String about;
+
+    String website;
+
+    Integer orderNum;
+
+    Boolean active;
+
+    public PartnerDTO(Partner entity, String lang) {
+        this.id = entity.getId();
+        this.slug = entity.getSlug();
+        this.logo = new PhotoDTO(entity.getLogo());
+        this.name = entity.getName();
+        this.website = entity.getWebsite();
+        this.orderNum = entity.getOrderNum();
+        this.active = entity.getActive();
+        switch (lang.toLowerCase()) {
+            case "uz" -> {
+                this.note = entity.getNoteUz();
+                this.about = entity.getAboutUz();
             }
-            case "ru":
-            {
-                this.title = partner.getTitleRu();
-                this.mainDescription = partner.getMainDescriptionRu();
-                this.description =partner.getDescriptionRu();
-                break;
+            case "ru" -> {
+                this.note = entity.getNoteRu();
+                this.about = entity.getAboutRu();
             }
-            case "eng":
-            {
-                this.title = partner.getTitleEng();
-                this.mainDescription = partner.getMainDescriptionEng();
-                this.description =partner.getDescriptionEng();
-                break;
+            case "en" -> {
+                this.note = entity.getNoteEn();
+                this.about = entity.getAboutEn();
             }
-            default:
-                throw new LanguageNotSupportException("Language not supported: " + lang);
+            default -> throw new LanguageNotSupportException("Language not supported: " + lang);
         }
     }
 

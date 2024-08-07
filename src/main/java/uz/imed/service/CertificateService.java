@@ -7,159 +7,117 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import uz.imed.entity.*;
-import uz.imed.exeptions.NotFoundException;
-import uz.imed.payload.AboutUsHeaderDTO;
+import uz.imed.entity.Certificate;
+import uz.imed.exception.NotFoundException;
 import uz.imed.payload.ApiResponse;
 import uz.imed.payload.CertificateDTO;
-import uz.imed.payload.ClientDTO;
+import uz.imed.payload.CertificatePhotoDTO;
 import uz.imed.repository.CertificateRepository;
 import uz.imed.util.SlugUtil;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class CertificateService {
-    private final CertificateRepository certificateRepository;
 
-    private final PhotoService photoService;
+    private final CertificateRepository certificateRepository;
 
     private final ObjectMapper objectMapper;
 
-    public ResponseEntity<ApiResponse<Certificate>> create(String json,MultipartFile file) {
+    private final PhotoService photoService;
+
+    public ResponseEntity<ApiResponse<Certificate>> create(String json, MultipartFile photoFile) {
         ApiResponse<Certificate> response = new ApiResponse<>();
         try {
             Certificate certificate = objectMapper.readValue(json, Certificate.class);
-            Long id = certificateRepository.save(new Certificate()).getId();
-            certificate.setCertificateImage(photoService.save(file));
-            certificate.setId(id);
-            certificate.setSlug(id + "-" + certificate.getTitleUz());
-            ArrayList<Photo> objects = new ArrayList<>();
-
-            response.setData(certificateRepository.save(certificate));
-            response.setMessage("Certificate succesfully created");
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            certificate.setActive(true);
+            certificate.setPhoto(photoService.save(photoFile));
+            Certificate saved = certificateRepository.save(certificate);
+            String slug = saved.getId() + "-" + SlugUtil.makeSlug(saved.getTitleUz());
+            certificateRepository.updateSlug(slug, saved.getId());
+            saved.setSlug(slug);
+            response.setData(saved);
+            return ResponseEntity.ok(response);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to parse json: " + e.getMessage());
+            response.setMessage(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
     }
 
-    public ResponseEntity<ApiResponse<?>> getById(Long id, String lang) {
+    public ResponseEntity<ApiResponse<?>> findBySlug(String slug, String lang) {
+        Certificate certificate = certificateRepository.findBySlug(slug)
+                .orElseThrow(() -> new NotFoundException("Certificate is not found by slug: " + slug));
         if (lang == null) {
             ApiResponse<Certificate> response = new ApiResponse<>();
-            Optional<Certificate> byId = certificateRepository.findById(id);
-            Certificate aboutUsHeader = byId.orElseThrow(() -> new NotFoundException("Certificate not found by id : " + id));
-            response.setData(aboutUsHeader);
-            response.setMessage("Found all data");
+            response.setData(certificate);
             return ResponseEntity.ok(response);
         }
-
         ApiResponse<CertificateDTO> response = new ApiResponse<>();
-        Optional<Certificate> byId = certificateRepository.findById(id);
-        Certificate aboutUsHeader = byId.orElseThrow(() -> new NotFoundException("Certificate not found by slug : " + id));
-        response.setData(new CertificateDTO(aboutUsHeader, lang));
-        response.setMessage("Found in language : " + lang);
+        response.setData(new CertificateDTO(certificate, lang));
         return ResponseEntity.ok(response);
     }
 
-    public ResponseEntity<ApiResponse<?>> findAll(String lang) {
+    public ResponseEntity<ApiResponse<?>> findAll(String lang, Boolean onlyPhoto) {
+        List<Certificate> all = certificateRepository.findAll();
         if (lang == null) {
             ApiResponse<List<Certificate>> response = new ApiResponse<>();
-            List<Certificate> all = certificateRepository.findAll();
-            response.setMessage("Found " + all.size() + " data");
-            response.setData(all);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }
-
-        ApiResponse<List<CertificateDTO>> response = new ApiResponse<>();
-        List<Certificate> all = certificateRepository.findAll();
-        response.setMessage("Found " + all.size() + " data");
-        response.setData(new ArrayList<>());
-        all.forEach(i -> response.getData().add(new CertificateDTO(i, lang)));
-
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-
-
-    public ResponseEntity<ApiResponse<?>> get(String slug, String lang) {
-        if (lang == null) {
-            ApiResponse<Certificate> response = new ApiResponse<>();
-            Optional<Certificate> bySlugIgnoreCase = certificateRepository.findBySlugIgnoreCase(slug);
-            Certificate certificate = bySlugIgnoreCase.orElseThrow(() -> new NotFoundException("Certificate not found by slug : " + slug));
-            response.setData(certificate);
-            response.setMessage("Found all certificate(s)");
+            response.setData(new ArrayList<>());
+            all.forEach(certificate -> response.getData().add(certificate));
+            response.setMessage("Found " + all.size() + " certificate(s)");
             return ResponseEntity.ok(response);
         }
-
-        ApiResponse<CertificateDTO> response = new ApiResponse<>();
-        Optional<Certificate> bySlugIgnoreCase = certificateRepository.findBySlugIgnoreCase(slug);
-        Certificate certificate = bySlugIgnoreCase.orElseThrow(() -> new NotFoundException("Certificate not found by slug : " + slug));
-        response.setData(new CertificateDTO(certificate, lang));
-        response.setMessage("Found in language : " + lang);
+        if (onlyPhoto){
+            ApiResponse<List<CertificatePhotoDTO>> response=new ApiResponse<>();
+            response.setData(new ArrayList<>());
+            all.forEach(certificate -> response.getData().add(new CertificatePhotoDTO(certificate)));
+            return ResponseEntity.ok(response);
+        }
+        ApiResponse<List<CertificateDTO>> response = new ApiResponse<>();
+        response.setData(new ArrayList<>());
+        all.forEach(certificate -> response.getData().add(new CertificateDTO(certificate, lang)));
         return ResponseEntity.ok(response);
-
     }
 
-    public ResponseEntity<ApiResponse<Certificate>> update(String json) {
-        try {
-            Certificate certificate = objectMapper.readValue(json, Certificate.class);
-            Long id = certificate.getId();
-
-            ApiResponse<Certificate> response = new ApiResponse<>();
-            if (!certificateRepository.existsById(id)) {
-                response.setMessage("Certificate with id " + id + " does not exist");
-                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-            }
-
-            Certificate certificate1 = certificateRepository.findById(id).get();
-
-            if (certificate.getTitleUz() != null ) {
-                certificate1.setTitleUz(certificate.getTitleUz());
-                String slug = certificate.getId() + "-" + SlugUtil.makeSlug(certificate.getTitleUz());
-                certificateRepository.updateSlug(slug, certificate.getId());
-                certificate1.setSlug(slug);
-            }
-            if (certificate.getTitleRu() != null ) {
-                certificate1.setTitleRu(certificate.getTitleRu());
-            }
-            if (certificate.getTitleEng() != null ) {
-                certificate1.setTitleEng(certificate.getTitleEng());;
-            }
-            if (certificate.getDescriptionUz() != null ) {
-                certificate1.setDescriptionUz(certificate.getDescriptionUz());
-            }
-            if (certificate.getDescriptionRu() != null ) {
-                certificate1.setDescriptionRu(certificate.getDescriptionRu());
-            }
-            if (certificate.getDescriptionEng() != null ) {
-                certificate1.setDescriptionUz(certificate.getDescriptionEng());
-            }
-
-
-            certificate1.setId(id);
-            Certificate save = certificateRepository.save(certificate1);
-
-            response.setMessage("Successfully updated");
-            response.setData(save);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public ResponseEntity<ApiResponse<Certificate>> delete(Long id) {
+    public ResponseEntity<ApiResponse<Certificate>> update(Certificate certificate) {
         ApiResponse<Certificate> response = new ApiResponse<>();
-        try {
-            certificateRepository.deleteById(id);
-            response.setMessage("Successfully deleted");
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (Exception e) {
-            response.setMessage("Error deleting client" + e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        Certificate fromDB = certificateRepository.findById(certificate.getId())
+                .orElseThrow(() -> new NotFoundException("Certificate is not found by id: " + certificate.getId()));
+
+        if (certificate.getTitleUz() != null) {
+            fromDB.setTitleUz(certificate.getTitleUz());
+            fromDB.setSlug(fromDB.getId() + "-" + SlugUtil.makeSlug(certificate.getTitleUz()));
         }
+        if (certificate.getTitleEn() != null) {
+            fromDB.setTitleEn(certificate.getTitleEn());
+        }
+        if (certificate.getTitleRu() != null) {
+            fromDB.setTitleRu(certificate.getTitleRu());
+        }
+
+        if (certificate.getTextUz() != null) {
+            fromDB.setTextUz(certificate.getTextUz());
+        }
+        if (certificate.getTextEn() != null) {
+            fromDB.setTextEn(certificate.getTextEn());
+        }
+        if (certificate.getTextRu() != null) {
+            fromDB.setTextRu(certificate.getTextRu());
+        }
+
+        response.setData(certificateRepository.save(fromDB));
+        return ResponseEntity.ok(response);
     }
+
+    public ResponseEntity<ApiResponse<?>> delete(Long id) {
+        ApiResponse<?> response = new ApiResponse<>();
+        if (!certificateRepository.existsById(id)) {
+            throw new NotFoundException("Certificate is not found by id: " + id);
+        }
+        certificateRepository.deleteById(id);
+        response.setMessage("Successfully deleted!");
+        return ResponseEntity.ok(response);
+    }
+
 }

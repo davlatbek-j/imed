@@ -1,21 +1,18 @@
 package uz.imed.controller;
 
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import uz.imed.entity.Event;
 import uz.imed.payload.ApiResponse;
-import uz.imed.payload.EventDTO;
 import uz.imed.service.EventService;
 
-import java.util.List;
-
 @RestController
-@RequestMapping("/event")
+@RequestMapping("/v1/event")
 @RequiredArgsConstructor
 public class EventController {
+
     private final EventService eventService;
 
     @PostMapping("/create")
@@ -27,25 +24,20 @@ public class EventController {
     }
 
     @GetMapping("/get/{slug}")
-    public ResponseEntity<ApiResponse<EventDTO>> findById(
+    public ResponseEntity<ApiResponse<?>> getBySlug(
             @PathVariable String slug,
-            @RequestHeader(value = "Accept-Language") String lang
+            @RequestHeader(value = "Accept-Language", required = false) String lang
     ) {
         return eventService.findBySlug(slug, lang);
     }
 
-    @GetMapping("/get-full-data/{id}")
-    public ResponseEntity<ApiResponse<Event>> findFullData(
-            @PathVariable Long id
-    ) {
-        return eventService.findFullDataById(id);
-    }
-
     @GetMapping("/get-all")
-    public ResponseEntity<ApiResponse<List<EventDTO>>> findAll(
-            @RequestHeader(value = "Accept-Language") String lang
+    public ResponseEntity<ApiResponse<?>> findAll(
+            @RequestHeader(value = "Accept-Language",required = false) String lang,
+            @RequestParam(value = "page", defaultValue = "1") Integer page,
+            @RequestParam(value = "size", required = false, defaultValue = "10") Integer size
     ) {
-        return eventService.findAll(lang);
+        return eventService.findAllByPageNation(lang,page,size);
     }
 
     @PutMapping("/update")
@@ -59,7 +51,8 @@ public class EventController {
     public ResponseEntity<ApiResponse<?>> delete(
             @PathVariable Long id
     ) {
-        return eventService.deleteById(id);
+        return eventService.delete(id);
     }
+
 
 }

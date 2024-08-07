@@ -1,9 +1,7 @@
 package uz.imed.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,28 +9,43 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Entity(name = "equipment_category")
-public class Category extends BaseEntity {
-    String header;
 
+@Entity
+@Table(name = "category")
+public class Category
+{
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JsonProperty(value = "item")
-    List<CategoryItem> itemList;
+    String nameUz;
+    String nameRu;
+    String nameEn;
 
-    Boolean addable = true;
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @Column(unique = true)
+    String slug;
 
-    public Category(Long id, String header, List<CategoryItem> itemList, Boolean addable)
+    @OneToOne
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    Photo photo;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "category", orphanRemoval = true)
+    List<Catalog> catalogs;
+
+    Boolean active = true;
+
+    Boolean main = true;
+
+    @PostPersist
+    private void setCatalogId()
     {
-        super(id);
-        this.header = header;
-        this.itemList = itemList;
-        this.addable = addable;
+        if (this.catalogs != null)
+            this.catalogs.forEach(i -> i.setCategory(this));
     }
-
-
 }

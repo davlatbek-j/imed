@@ -2,292 +2,252 @@ package uz.imed.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import uz.imed.entity.AboutUsChooseUs;
 import uz.imed.entity.Catalog;
 import uz.imed.entity.Category;
-import uz.imed.entity.CategoryItem;
-import uz.imed.payload.AboutUsChooseUsDTO;
+import uz.imed.exception.NotDeleteException;
+import uz.imed.exception.NotFoundException;
 import uz.imed.payload.ApiResponse;
-import uz.imed.payload.CategoryItemDTO;
+import uz.imed.payload.category.CategoryDTO;
+import uz.imed.payload.category.CategoryNameDTO;
 import uz.imed.repository.CatalogRepository;
-import uz.imed.repository.CategoryItemRepository;
 import uz.imed.repository.CategoryRepository;
+import uz.imed.repository.ProductRepository;
 import uz.imed.util.SlugUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@RequiredArgsConstructor
+
 @Service
 @Transactional
-@RequiredArgsConstructor
-public class CategoryService {
-
-    private final CategoryRepository categoryRepo;
-
-    private final ObjectMapper objectMapper;
-
-    private final PhotoService photoService;
-
-    private final CategoryItemRepository categoryItemRepository;
-
+public class CategoryService
+{
+    private final CategoryRepository categoryRepository;
     private final CatalogRepository catalogRepository;
+    private final ObjectMapper objectMapper;
+    private final PhotoService photoService;
+    private final ProductRepository productRepository;
 
-    public ResponseEntity<ApiResponse<Category>> addItem(CategoryItem categoryItem, MultipartFile photo) {
+    private static final Logger logger = LoggerFactory.getLogger(CategoryService.class);
+
+    public ResponseEntity<ApiResponse<Category>> add(String json, MultipartFile photo)
+    {
         ApiResponse<Category> response = new ApiResponse<>();
+        try
+        {
+            Category category = objectMapper.readValue(json, Category.class);
+            Category saved = categoryRepository.save(category);
+            saved.setSlug(saved.getId() + "-" + SlugUtil.makeSlug(saved.getNameUz()));
+            saved.setPhoto(photoService.save(photo));
 
-        CategoryItem newCategoryItem = new CategoryItem();
-        newCategoryItem.setTitleUz(categoryItem.getTitleUz());
-        newCategoryItem.setTitleRu(categoryItem.getTitleRu());
-        newCategoryItem.setTitleEng(categoryItem.getTitleEng());
-        newCategoryItem.setSlug(categoryItem.getSlug());
-        newCategoryItem.setPhoto(photoService.save(photo));
-        newCategoryItem.setMain(categoryItem.getMain());
-        newCategoryItem.setActive(categoryItem.getActive());
-        Optional<Integer> maxOrderNum = categoryItemRepository.getMaxOrderNum();
-        categoryItem.setOrderNum(maxOrderNum.map(num -> num + 1).orElse(1));
+            response.setData(categoryRepository.save(saved));
+            response.setMessage("Category added");
+            return ResponseEntity.ok(response);
+        } catch (JsonProcessingException e)
+        {
+            throw new RuntimeException("Error parsing JSON: " + e.getMessage());
+        }
+    }
 
-        List<Category> all = categoryRepo.findAll();
-        if (all.isEmpty()) {
-            Category category = new Category();
-            category.setItemList(List.of(categoryItem));
-            categoryRepo.save(category);
+    public ResponseEntity<ApiResponse<?>> get(String slug, String lang)
+    {
+        if (lang == null)
+        {
+            ApiResponse<Category> response = new ApiResponse<>();
+            Optional<Category> bySlug = categoryRepository.findBySlugIgnoreCase(slug);
+            Category category = bySlug.orElseThrow(() -> new NotFoundException("Category not found by slug: " + slug));
             response.setData(category);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            response.setMessage("Found all language(s)");
+            return ResponseEntity.ok(response);
+        } else
+        {
+            ApiResponse<CategoryDTO> response = new ApiResponse<>();
+            Optional<Category> bySlug = categoryRepository.findBySlugIgnoreCase(slug);
+            Category category = bySlug.orElseThrow(() -> new NotFoundException("Category not found by slug: " + slug));
+            response.setData(new CategoryDTO(category, lang));
+            response.setMessage("Found in language: " + lang);
+            return ResponseEntity.ok(response);
         }
-        Category category = all.get(0);
-        if (category.getItemList().isEmpty()) category.setItemList(List.of(categoryItem));
-        else category.getItemList().add(categoryItem);
-        response.setData(categoryRepo.save(category));
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    public ResponseEntity<ApiResponse<Category>> get(Boolean main, Boolean active) {
-        ApiResponse<Category> response = new ApiResponse<>();
-        List<Category> all = categoryRepo.findAll();
-        if (all.isEmpty()) {
-            response.setMessage("Category is null , not created yet");
-            return ResponseEntity.status(404).body(response);
-        }
-        Category category = all.get(0);
+    public ResponseEntity<ApiResponse<?>> getAll(String lang, Boolean main, Boolean active, boolean onlyName)
+    {
+        if (onlyName && lang == null)
+            throw new NotFoundException("When you need only name of categories, you must send language also");
 
-        List<CategoryItem> categoryItemList = new ArrayList<>();
-        for (CategoryItem categoryItem : category.getItemList()) {
-            if (categoryItem.getMain().equals(main) && categoryItem.getActive().equals(active))
-                categoryItemList.add(categoryItem);
-            else if (main == null && active == null) {
-                categoryItemList.add(categoryItem);
+        if (lang == null)
+        {
+            ApiResponse<List<Category>> response = new ApiResponse<>();
+
+            if (main == null && active == null)
+                response.setData(categoryRepository.findAll());
+            else if (main == null)
+                response.setData(categoryRepository.findAllByActive(active));
+            else if (active == null)
+                response.setData(categoryRepository.findAllByMain(main));
+            else
+                response.setData(categoryRepository.findAllByMainAndActive(main, active));
+
+            response.setMessage(String.format("Found %s category(ies)", response.getData().size()));
+            return ResponseEntity.ok(response);
+
+        } else if (onlyName)
+        {
+            System.err.println("Only name ----------------- ");
+            ApiResponse<List<CategoryNameDTO>> response = new ApiResponse<>();
+            response.setData(new ArrayList<>());
+
+            if (main == null && active == null)
+            {
+                List<Category> all = categoryRepository.findAll();
+                all.forEach(i -> response.getData().add(new CategoryNameDTO(i, lang)));
+            } else if (main == null)
+            {
+                List<Category> allByActive = categoryRepository.findAllByActive(active);
+                allByActive.forEach(i -> response.getData().add(new CategoryNameDTO(i, lang)));
+            } else if (active == null)
+            {
+                List<Category> allByMain = categoryRepository.findAllByMain(main);
+                allByMain.forEach(i -> response.getData().add(new CategoryNameDTO(i, lang)));
+            } else
+            {
+                List<Category> allByMainAndActive = categoryRepository.findAllByMainAndActive(main, active);
+                allByMainAndActive.forEach(i -> response.getData().add(new CategoryNameDTO(i, lang)));
             }
+
+            response.setMessage(String.format("Found %s category(ies)", response.getData().size()));
+            return ResponseEntity.ok(response);
+
+        } else
+        {
+            ApiResponse<List<CategoryDTO>> response = new ApiResponse<>();
+            response.setData(new ArrayList<>());
+
+            if (main == null && active == null)
+            {
+                List<Category> all = categoryRepository.findAll();
+                all.forEach(i -> response.getData().add(new CategoryDTO(i, lang)));
+            } else if (main == null)
+            {
+                List<Category> allByActive = categoryRepository.findAllByActive(active);
+                allByActive.forEach(i -> response.getData().add(new CategoryDTO(i, lang)));
+            } else if (active == null)
+            {
+                List<Category> allByMain = categoryRepository.findAllByMain(main);
+                allByMain.forEach(i -> response.getData().add(new CategoryDTO(i, lang)));
+            } else
+            {
+                List<Category> allByMainAndActive = categoryRepository.findAllByMainAndActive(main, active);
+                allByMainAndActive.forEach(i -> response.getData().add(new CategoryDTO(i, lang)));
+            }
+
+            response.setMessage(String.format("Found %s category(ies)", response.getData().size()));
+            return ResponseEntity.ok(response);
         }
-
-        response.setMessage("Found");
-        response.setData(new Category(category.getId(), category.getHeader(), categoryItemList, category.getAddable()));
-        return ResponseEntity.status(200).body(response);
     }
 
-    public ResponseEntity<ApiResponse<List<CategoryItemDTO>>> findAllCategoryItems(String lang) {
-        ApiResponse<List<CategoryItemDTO>> response = new ApiResponse<>();
-        List<CategoryItem> items = categoryItemRepository.findAll();
-        response.setMessage("Found " + items.size() + " categories(s)");
-        response.setData(new ArrayList<>());
-        items.forEach(i -> response.getData().add(new CategoryItemDTO(i, lang)));
+    public ResponseEntity<ApiResponse<Category>> update(Category newCategory)
+    {
+        if (newCategory == null || newCategory.getId() == null)
+            throw new NotFoundException("Category or id is null");
 
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    public ResponseEntity<ApiResponse<List<Category>>> findAll() {
-        ApiResponse<List<Category>> response = new ApiResponse<>();
-        response.setData(new ArrayList<>());
-        List<Category> all = categoryRepo.findAll();
-        all.forEach(equipmentCategory -> response.getData().add(equipmentCategory));
-        response.setMessage("Found " + all.size() + " categories");
-        return ResponseEntity.status(200).body(response);
-    }
-
-    public ResponseEntity<ApiResponse<Category>> update(Category newCategory) {
+        Category fromDB = categoryRepository.findById(newCategory.getId()).orElseThrow(() -> new NotFoundException("Category not found by id: " + newCategory.getId()));
         ApiResponse<Category> response = new ApiResponse<>();
-        List<Category> all = categoryRepo.findAll();
-        if (all.isEmpty()) {
-            response.setMessage("Category is null, not created yet. You can't update it");
-            return ResponseEntity.status(404).body(response);
+
+        if (newCategory.getNameUz() != null)
+        {
+            fromDB.setNameUz(newCategory.getNameUz());
+            fromDB.setSlug(fromDB.getId() + "-" + newCategory.getNameUz());
         }
-        Category fromDB = all.get(0);
-        List<CategoryItem> fromDBItemList = fromDB.getItemList();
-        List<CategoryItem> newItemList = newCategory.getItemList();
-        int givenOrderNumCount = 0;
-        for (CategoryItem newItem : newItemList) {
-            if (newItem.getId() != null) {
-                if (newItem.getTitleUz() != null) {
-                    for (CategoryItem item : fromDBItemList)
-                        if (item.getId().equals(newItem.getId()) && !item.getTitleUz().equals(newItem.getTitleUz())) {
-                            item.setTitleUz(newItem.getTitleUz());
-                            item.setSlug(SlugUtil.makeSlug(newItem.getTitleUz()));
-                        }
-                }
+        if (newCategory.getNameRu() != null)
+            fromDB.setNameRu(newCategory.getNameRu());
+        if (newCategory.getNameEn() != null)
+            fromDB.setNameEn(newCategory.getNameEn());
 
-                if (newItem.getTitleRu() != null) {
-                    for (CategoryItem item : fromDBItemList)
-                        if (item.getId().equals(newItem.getId()) && !item.getTitleRu().equals(newItem.getTitleRu())) {
-                            item.setTitleRu(newItem.getTitleRu());
-                            item.setSlug(SlugUtil.makeSlug(newItem.getTitleRu()));
-                        }
-                }
+        if (newCategory.getActive() != null)
+            fromDB.setActive(newCategory.getActive());
 
-                if (newItem.getTitleEng() != null) {
-                    for (CategoryItem item : fromDBItemList)
-                        if (item.getId().equals(newItem.getId()) && !item.getTitleEng().equals(newItem.getTitleEng())) {
-                            item.setTitleEng(newItem.getTitleEng());
-                            item.setSlug(SlugUtil.makeSlug(newItem.getTitleEng()));
-                        }
-                }
+        if (newCategory.getMain() != null)
+            fromDB.setMain(newCategory.getMain());
 
-                //Update only existing catalog not ADD !!!
-                if (newItem.getCatalogList() != null) {
-                    for (CategoryItem fromDbItem : fromDBItemList)
-                        if (fromDbItem.getId().equals(newItem.getId())) {
-                            for (Catalog fromDb : fromDbItem.getCatalogList()) {
-                                for (Catalog newItemCatalog : newItem.getCatalogList()) {
-                                    if (fromDb.getId().equals(newItemCatalog.getId())) {
-                                        if (newItemCatalog.getNameUz() != null)
-                                            fromDb.setNameUz(newItemCatalog.getNameUz());
-                                    }
-                                    if (newItemCatalog.getNameRu() != null) {
+        List<Catalog> newCatalogs = newCategory.getCatalogs();
+        List<Catalog> dbCatalogs = fromDB.getCatalogs();
+        if (newCatalogs != null)
+        {
+            for (Catalog newCatalog : newCatalogs)
+            {
+                if (newCatalog.getId() != null && dbCatalogs != null)
+                {
+                    for (Catalog dbCatalog : dbCatalogs)
+                    {
+                        if (newCatalog.getId().equals(dbCatalog.getId()))
+                        {
+                            if (newCatalog.getNameUz() != null)
+                                dbCatalog.setNameUz(newCatalog.getNameUz());
 
-                                        fromDb.setNameRu(newItemCatalog.getNameRu());
-                                    }
-                                    if (newItemCatalog.getNameEng() != null) {
-                                        fromDb.setNameEng(newItemCatalog.getNameEng());
-                                    }
+                            if (newCatalog.getNameRu() != null)
+                                dbCatalog.setNameRu(newCatalog.getNameRu());
 
+                            if (newCatalog.getNameEn() != null)
+                                dbCatalog.setNameEn(newCatalog.getNameEn());
+
+                            if (newCatalog.getNameUz() == null && newCatalog.getNameRu() == null && newCatalog.getNameEn() == null)
+                            {
+                                if (productRepository.existsByCatalogId(newCatalog.getId()))
+                                {
+                                    Integer countByCatalogId = productRepository.countByCatalogId(newCatalog.getId());
+                                    String s = String.format("You can't delete catalog(id=%s), because inside of catalog have %s product(s). Please delete or remove this product(s) other catalog first", newCatalog.getId(), countByCatalogId);
+                                    logger.info(s);
+                                    throw new NotDeleteException(s);
                                 }
+                                catalogRepository.delete(newCatalog.getId());
                             }
-                        }
 
-                    //Add only new added catalog
-                    for (Catalog newCatalog : newItem.getCatalogList()) {
-                        // When id not given , added.
-                        if (newCatalog.getId() == null) {
-                            for (CategoryItem fromDb : fromDBItemList) {
-                                if (fromDb.getId().equals(newItem.getId())) {
-                                    Catalog catalog = new Catalog();
-                                    catalog.setNameUz(newCatalog.getNameUz());
-                                    catalog.setNameRu(newCatalog.getNameRu());
-                                    catalog.setNameEng(newCatalog.getNameEng());
-
-                                    Catalog save = catalogRepository.save(newCatalog);
-                                    fromDb.getCatalogList().add(save);
-                                }
-                            }
                         }
                     }
-
-                }
-                if (newItem.getActive() != null) {
-                    for (CategoryItem categoryItemFromDB : fromDBItemList)
-                        if (categoryItemFromDB.getId().equals(newItem.getId()))
-                            categoryItemFromDB.setActive(newItem.getActive());
-                }
-                if (newItem.getMain() != null) {
-                    for (CategoryItem categoryItemFromDB : fromDBItemList)
-                        if (categoryItemFromDB.getId().equals(newItem.getId()))
-                            categoryItemFromDB.setMain(newItem.getMain());
+                } else if (newCatalog.getNameUz() != null || newCatalog.getNameRu() != null || newCatalog.getNameEn() != null)
+                {
+                    newCatalog.setCategory(fromDB);
+                    if (dbCatalogs != null)
+                        dbCatalogs.add(newCatalog);
+                    else
+                    {
+                        dbCatalogs = new ArrayList<>();
+                        dbCatalogs.add(newCatalog);
+                    }
+                    catalogRepository.saveAndFlush(newCatalog);
                 }
             }
-            if (newItem.getOrderNum() != null)
-                givenOrderNumCount++;
-        }
-        //Update order number
-        if (givenOrderNumCount > 0 && givenOrderNumCount != fromDBItemList.size()) {
-            response.setMessage("In database have: " + fromDBItemList.size() + " item(s). But you send " + givenOrderNumCount + " order number(s)");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        } else if (givenOrderNumCount == fromDBItemList.size() && givenOrderNumCount != 0) {
-            replaceOrderNum(fromDBItemList, newItemList);
         }
 
-
-        // Check header text:
-        if (newCategory.getHeader() != null)
-            fromDB.setHeader(newCategory.getHeader());
-
-        response.setData(categoryRepo.save(fromDB));
+        response.setData(categoryRepository.saveAndFlush(fromDB));
         response.setMessage("Updated");
-        return ResponseEntity.status(201).
-
-                body(response);
+        return ResponseEntity.ok(response);
     }
 
-    private void replaceOrderNum(List<CategoryItem> fromDBItemList, List<CategoryItem> newItemList) {
-        for (CategoryItem db : fromDBItemList) {
-            Long dbId = db.getId();
-            for (CategoryItem newItem : newItemList) {
-                if (newItem.getId().equals(dbId)) {
-                    db.setOrderNum(newItem.getOrderNum());
-                }
-            }
+    public ResponseEntity<ApiResponse<?>> delete(Long categoryId)
+    {
+        if (!categoryRepository.existsById(categoryId))
+            throw new NotFoundException("Category not found by id: " + categoryId);
+
+        if (productRepository.existsByCategoryId(categoryId))
+        {
+            Integer i = productRepository.countByCategoryId(categoryId);
+            String s = String.format("You can't delete category(id=%s), because inside of category have %s product(s). Please delete or remove this product(s) other category first", categoryId, i);
+            logger.info(s);
+            throw new NotDeleteException(s);
         }
-    }
 
-    private void replaceMain(List<CategoryItem> fromDBItemList, Long id, Boolean active) {
-        for (CategoryItem item : fromDBItemList) {
-            if (item.getId().equals(id)) {
-                item.setActive(active);
-            }
-        }
-    }
-
-    private void replaceActive(List<CategoryItem> fromDBItemList, Long id, Boolean active) {
-        for (CategoryItem item : fromDBItemList) {
-            if (item.getId().equals(id))
-                item.setActive(active);
-        }
-    }
-
-
-
-    private void updateCatalogList(List<CategoryItem> fromDBItemList, Long id, List<Catalog> newCatalogList) {
-        for (CategoryItem item : fromDBItemList) {
-            if (item.getId().equals(id))
-                item.setCatalogList(newCatalogList);
-        }
-    }
-
-
-    public ResponseEntity<ApiResponse<?>> delete(Long id) {
-        ApiResponse<?> response = new ApiResponse<>();
-        if (!categoryItemRepository.existsById(id)) {
-            response.setMessage("Category item is not found by id: " + id);
-            return ResponseEntity.status(404).body(response);
-        }
-        categoryItemRepository.deleteById(id);
-        response.setMessage("Successfully deleted!");
-        return ResponseEntity.status(200).body(response);
-    }
-
-
-    public ResponseEntity<ApiResponse<CategoryItem>> getItem(String slug) {
-        ApiResponse<CategoryItem> response = new ApiResponse<>();
-        Optional<CategoryItem> bySlug = categoryItemRepository.findBySlug(slug);
-        if (bySlug.isEmpty()) {
-            response.setMessage("Category is not found by slug: " + slug);
-            return ResponseEntity.status(404).body(response);
-        }
-        response.setData(bySlug.get());
-        response.setMessage("Found");
-        return ResponseEntity.status(200).body(response);
-    }
-
-    public ResponseEntity<ApiResponse<List<CategoryItemDTO>>> getNameList(String lang) {
-        ApiResponse<List<CategoryItemDTO>> response = new ApiResponse<>();
-        List<CategoryItem> all = categoryItemRepository.findAll();
-        response.setData(new ArrayList<>());
-        all.forEach(i -> response.getData().add(new CategoryItemDTO(i,lang)));
-        response.setMessage("Found " + all.size() + " category name(s)");
-        return ResponseEntity.status(200).body(response);
+        categoryRepository.deleteById(categoryId);
+        return ResponseEntity.ok(new ApiResponse<>("Deleted", null));
     }
 }

@@ -1,24 +1,37 @@
 package uz.imed.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
+import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
+
+import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+
 @Entity(name = "partner_header")
-public class PartnerHeader extends BaseEntity{
+public class PartnerHeader {
 
-    @Column(length = 3000)
-    String descriptionUz;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
 
-    @Column(length = 3000)
-    String descriptionRu;
+    @Column(length = 500)
+    String titleUz;
+    @Column(length = 500)
+    String titleRu;
+    @Column(length = 500)
+    String titleEn;
 
-    @Column(length = 3000)
-    String descriptionEng;
-
+    @Column(length = 2000)
+    String textUz;
+    @Column(length = 2000)
+    String textRu;
+    @Column(length = 2000)
+    String textEn;
 }

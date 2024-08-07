@@ -1,17 +1,16 @@
 package uz.imed.payload;
 
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import uz.imed.entity.Photo;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class PhotoDTO {
+public class PhotoDTO
+{
     Long id;
 
     String url;

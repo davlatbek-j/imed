@@ -6,7 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import uz.imed.entity.Certificate;
-import uz.imed.exeptions.LanguageNotSupportException;
+import uz.imed.entity.Photo;
+import uz.imed.exception.LanguageNotSupportException;
 
 @Data
 @AllArgsConstructor
@@ -16,38 +17,47 @@ public class CertificateDTO {
 
     Long id;
 
+    String slug;
+
     String title;
 
-    String description;
+    String text;
 
-    PhotoDTO photoDTO;
+    Photo photo;
 
-    public CertificateDTO(Certificate certificate,String lang){
-        this.id= certificate.getId();;
-        this.photoDTO=new PhotoDTO(certificate.getCertificateImage());
+    Boolean active;
 
-        switch (lang.toLowerCase()){
-            case "uz":
-            {
-                this.title=certificate.getTitleUz();
-                this.description=certificate.getDescriptionUz();
+    public CertificateDTO(Certificate certificate, String lang) {
+        this.id = certificate.getId();
+        this.slug = certificate.getSlug();
+        this.photo = certificate.getPhoto();
+        this.active = certificate.getActive();
+
+        switch (lang.toLowerCase()) {
+
+            case "uz": {
+                this.title = certificate.getTitleUz();
+                this.text = certificate.getTextUz();
                 break;
             }
-            case "ru":
-            {
-                this.title=certificate.getTitleRu();
-                this.description=certificate.getDescriptionRu();
+
+            case "ru": {
+                this.title = certificate.getTextRu();
+                this.text = certificate.getTextRu();
                 break;
             }
-            case "eng":
-            {
-                this.title=certificate.getTitleEng();
-                this.description=certificate.getDescriptionEng();
+
+            case "en": {
+                this.title = certificate.getTextEn();
+                this.text = certificate.getTextEn();
                 break;
             }
+
             default:
                 throw new LanguageNotSupportException("Language not supported: " + lang);
 
         }
+
     }
+
 }

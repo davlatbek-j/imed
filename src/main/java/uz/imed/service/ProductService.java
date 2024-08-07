@@ -1,241 +1,587 @@
 package uz.imed.service;
 
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.boot.autoconfigure.web.client.RestClientAutoConfiguration;
+import org.springframework.boot.web.servlet.filter.OrderedFormContentFilter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import uz.imed.entity.Catalog;
-import uz.imed.entity.Product;
-import uz.imed.entity.ProductCharacteristic;
+import uz.imed.entity.*;
+import uz.imed.exception.NotFoundException;
 import uz.imed.payload.ApiResponse;
 import uz.imed.payload.ProductDTO;
-import uz.imed.payload.ProductForListDTO;
-import uz.imed.repository.CatalogRepository;
-import uz.imed.repository.ProductRepository;
+import uz.imed.payload.ProductMainDataDTO;
+import uz.imed.repository.*;
 import uz.imed.util.SlugUtil;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+
+@RequiredArgsConstructor
 
 @Service
-@Transactional
-@RequiredArgsConstructor
-public class ProductService {
-
-    private final ProductRepository productRepository;
-
-    private final CatalogRepository catalogRepository;
-
+public class ProductService
+{
+    private final ProductRepository productRepo;
     private final ObjectMapper objectMapper;
-
     private final PhotoService photoService;
+    private final PartnerRepository partnerRepository;
+    private final CatalogRepository catalogRepository;
+    private final CategoryRepository categoryRepo;
+    private final OrderedFormContentFilter formContentFilter;
+    private final DescriptionRepository descriptionRepo;
+    private final ReviewOptionRepository reviewOptionRepo;
+    private final ReviewRepository reviewRepo;
+    private final RestClientAutoConfiguration restClientAutoConfiguration;
+    private final CharacteristicRepository characteristicRepo;
 
-    public ResponseEntity<ApiResponse<Product>> create(Long catalogId, String json, MultipartFile mainPhotoFile, List<MultipartFile> photoFiles) {
+    public ResponseEntity<ApiResponse<Product>> add(String json, List<MultipartFile> gallery, List<MultipartFile> reviewDoctorsPhoto)
+    {
         ApiResponse<Product> response = new ApiResponse<>();
-        Optional<Catalog> optionalCatalog = catalogRepository.findById(catalogId);
-        if (optionalCatalog.isEmpty()) {
-            response.setMessage("Catalog is not found by id: " + catalogId);
-            return ResponseEntity.status(404).body(response);
-        }
-        try {
+        try
+        {
             Product product = objectMapper.readValue(json, Product.class);
-            product.getCharacteristic().forEach(characteristic -> characteristic.setProduct(product));
-            product.setMainPhotoUrl(photoService.save(mainPhotoFile).getHttpUrl());
-            product.setActive(true);
-            product.setSalePrice(product.getPrice()-(product.getPrice())*product.getSale()*0.01);
-            product.setCatalog(optionalCatalog.get());
-            product.getCharacteristic().forEach(characteristic -> characteristic.setProduct(product));
-            product.setPhotoUrls(new ArrayList<>());
-            for (MultipartFile photo : photoFiles) {
-                product.getPhotoUrls().add(photoService.save(photo).getHttpUrl());
-            }
-            Product save = productRepository.save(product);
-            String slug = save.getId() + "-" + SlugUtil.makeSlug(save.getName());
-            productRepository.updateSlug(slug, save.getId());
-            save.setSlug(slug);
-            response.setData(save);
-            return ResponseEntity.status(200).body(response);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-//            response.setMessage(e.getMessage());
-//            return ResponseEntity.status(401).body(response);
-        }
-    }
 
-    public ResponseEntity<ApiResponse<Product>> findById(Long id) {
-        ApiResponse<Product> response = new ApiResponse<>();
-        Optional<Product> optionalProduct = productRepository.findById(id);
-        if (optionalProduct.isEmpty()) {
-            response.setMessage("Product is not found by id: " + id);
-            return ResponseEntity.status(404).body(response);
-        }
-        Product product = optionalProduct.get();
-        response.setMessage("Found");
-        response.setData(product);
-        return ResponseEntity.status(200).body(response);
-    }
+            if (product.getPartner() == null)
+                throw new NotFoundException("Partner not given");
+            product.setPartner(partnerRepository.findById(product.getPartner().getId()).orElseThrow(() -> new NotFoundException("Partner not found by id: " + product.getPartner().getId())));
 
-    public ResponseEntity<ApiResponse<Product>> findBySlug(String slug) {
-        ApiResponse<Product> response = new ApiResponse<>();
-        Optional<Product> optionalProduct = productRepository.findBySlug(slug);
-        if (optionalProduct.isEmpty()) {
-            response.setMessage("Product is not found by slug: " + slug);
-            return ResponseEntity.status(404).body(response);
-        }
-        Product product = optionalProduct.get();
-        response.setData(product);
-        return ResponseEntity.status(200).body(response);
-    }
+            if (product.getCatalog() != null && product.getCategory() != null)
+                throw new NotFoundException("Product belongs to only catalog or category. Not both");
 
-    public ResponseEntity<ApiResponse<List<ProductForListDTO>>> findAll() {
-        ApiResponse<List<ProductForListDTO>> response = new ApiResponse<>();
-        List<Product> all = productRepository.findAll();
-        response.setData(new ArrayList<>());
-        all.forEach(product -> response.getData().add(new ProductForListDTO(product)));
-        response.setMessage("Found " + all.size() + " product(s)");
-        return ResponseEntity.status(200).body(response);
-    }
-
-    public ResponseEntity<ApiResponse<Page<ProductForListDTO>>> findAllByPageNation(int page, int size) {
-        ApiResponse<Page<ProductForListDTO>> response = new ApiResponse<>();
-        Pageable pageable = PageRequest.of(page - 1, size);
-        Page<Product> all = productRepository.findAll(pageable);
-        Page<ProductForListDTO> map = all.map(ProductForListDTO::new);
-        response.setData(map);
-        return ResponseEntity.status(200).body(response);
-    }
-
-    public ResponseEntity<ApiResponse<List<ProductForListDTO>>> similarProduct(String productSlug) {
-        ApiResponse<List<ProductForListDTO>> response = new ApiResponse<>();
-        String catalogSlug = productRepository.findCatalogSlugByProductSlug(productSlug);
-        if (catalogSlug == null) {
-            response.setMessage("Product is not found by slug: " + productSlug);
-            return ResponseEntity.status(404).body(response);
-        }
-        response.setData(new ArrayList<>());
-        List<Product> all = productRepository.findAll();
-        all.stream()
-                .filter(product -> (product.getCatalog().getSlug().equals(catalogSlug) && !product.getSlug().equals(productSlug)))
-                .limit(4)
-                .toList()
-                .forEach(product -> response.getData().add(new ProductForListDTO(product)));
-        return ResponseEntity.status(200).body(response);
-    }
-
-    public ResponseEntity<ApiResponse<List<ProductDTO>>> findAllByCatalogSlug(String catalogSlug) {
-        ApiResponse<List<ProductDTO>> response = new ApiResponse<>();
-        response.setData(new ArrayList<>());
-        List<Product> all = productRepository.findAll();
-        all.stream()
-                .filter(product -> product.getCatalog().getSlug().equals(catalogSlug))
-                .toList()
-                .forEach(product -> response.getData().add(new ProductDTO(product)));
-        return ResponseEntity.status(200).body(response);
-    }
-
-    public ResponseEntity<ApiResponse<List<ProductDTO>>> findAllByCategorySlug(String categorySlug) {
-        ApiResponse<List<ProductDTO>> response = new ApiResponse<>();
-        response.setData(new ArrayList<>());
-        List<Product> all = productRepository.findAll();
-        all.stream()
-                .filter(product -> product.getCatalog().getCategory().getSlug().equals(categorySlug))
-                .toList()
-                .forEach(product -> response.getData().add(new ProductDTO(product)));
-        return ResponseEntity.status(200).body(response);
-    }
-
-    public ResponseEntity<ApiResponse<Product>> update(Long id, String newJson, MultipartFile newPhoto, List<MultipartFile> newPhotoList) {
-        ApiResponse<Product> response = new ApiResponse<>();
-        Optional<Product> optionalProduct = productRepository.findById(id);
-        if (optionalProduct.isEmpty()) {
-            response.setMessage("Product is not found by id: " + id);
-            return ResponseEntity.status(404).body(response);
-        }
-        Product oldProduct = optionalProduct.get();
-        String oldMainPhotoUrl = oldProduct.getMainPhotoUrl();
-        List<String> oldPhotoUrls = oldProduct.getPhotoUrls();
-        boolean active = oldProduct.isActive();
-        String slug = oldProduct.getSlug();
-
-        Product newProduct;
-        try {
-            if (newJson != null) {
-                newProduct = objectMapper.readValue(newJson, Product.class);
-                newProduct.setId(id);
-                newProduct.setActive(active);
-                newProduct.setSlug(slug);
-                newProduct.setSalePrice(newProduct.getPrice() - (newProduct.getPrice() * newProduct.getSale() * 0.01));
-                newProduct.setCatalog(oldProduct.getCatalog());
-
-                // Eski characteristiclarni olib tashlash
-                oldProduct.getCharacteristic().clear();
-                productRepository.save(oldProduct);
-
-                // Yangi characteristiclarni bog'lash
-                for (ProductCharacteristic characteristic : newProduct.getCharacteristic()) {
-                    characteristic.setProduct(newProduct);
-                }
-            } else {
-                newProduct = oldProduct;
+            if (product.getCatalog() != null)
+            {
+                Catalog catalog = catalogRepository.findById(product.getCatalog().getId()).orElseThrow(() -> new NotFoundException("Catalog not found by id: " + product.getCatalog().getId()));
+                product.setCatalog(catalog);
+                product.setCategory(catalog.getCategory());
             }
 
-            if (newPhoto == null || newPhoto.isEmpty()) {
-                newProduct.setMainPhotoUrl(oldMainPhotoUrl);
-            } else {
-                newProduct.setMainPhotoUrl(photoService.save(newPhoto).getHttpUrl());
-            }
+            if (product.getCategory() != null)
+                product.setCategory(categoryRepo.findById(product.getCategory().getId()).orElseThrow(() -> new NotFoundException("Category not found id: " + product.getCategory().getId())));
 
-            if (newPhotoList == null || newPhotoList.isEmpty()) {
-                newProduct.setPhotoUrls(oldPhotoUrls);
-            } else {
-                newProduct.setPhotoUrls(new ArrayList<>());
-                for (MultipartFile photo : newPhotoList) {
-                    newProduct.getPhotoUrls().add(photoService.save(photo).getHttpUrl());
-                }
-            }
+            Long id = productRepo.save(new Product()).getId();
+            product.setId(id);
+            product.setSlug(id + "-" + SlugUtil.makeSlug(product.getName()));
 
-            Product save = productRepository.save(newProduct);
-            response.setData(save);
+            if (product.getDescriptions() != null)
+                product.getDescriptions().forEach(i -> i.setProduct(product));
+            if (product.getCharacteristics() != null)
+                product.getCharacteristics().forEach(i -> i.setProduct(product));
+            if (product.getReviews() != null)
+                product.getReviews().forEach(i ->
+                {
+                    i.getOptions().forEach(j -> j.setReview(i));
+                    i.setProduct(product);
+                });
+
+            product.setGallery(new ArrayList<>());
+            gallery.forEach(i -> product.getGallery().add(photoService.save(i)));
+
+            response.setData(productRepo.save(product));
+            response.setMessage("Product added");
+
             return ResponseEntity.status(201).body(response);
-        } catch (JsonProcessingException e) {
-            response.setMessage(e.getMessage());
-            return ResponseEntity.status(401).body(response);
+
+        } catch (JsonProcessingException e)
+        {
+            throw new RuntimeException("Error parsing json" + e.getMessage());
         }
     }
 
-
-    public ResponseEntity<ApiResponse<?>> changeActive(Long id) {
-        ApiResponse<?> response = new ApiResponse<>();
-        Optional<Product> optionalProduct = productRepository.findById(id);
-        if (optionalProduct.isEmpty()) {
-            response.setMessage("Product is not found by id: " + id);
-            return ResponseEntity.status(404).body(response);
+    public ResponseEntity<ApiResponse<?>> get(String slug, String lang)
+    {
+        Product product = productRepo.findBySlug(slug).orElseThrow(() -> new NotFoundException("Product not not found by slug:" + slug));
+        if (lang == null)
+        {
+            ApiResponse<Product> response = new ApiResponse<>();
+            response.setData(product);
+            response.setMessage("All language");
+            return ResponseEntity.status(200).body(response);
+        } else
+        {
+            ApiResponse<ProductDTO> response = new ApiResponse<>();
+            response.setData(new ProductDTO(product, lang));
+            response.setMessage("Found: " + lang);
+            return ResponseEntity.status(200).body(response);
         }
-        Product product = optionalProduct.get();
-        boolean active = !product.isActive();
-        productRepository.changeActive(id, active);
-        response.setMessage("Successfully changed! Current product active: " + active);
+    }
+
+    public ResponseEntity<ApiResponse<?>> all(String lang, Long categoryId, Long catalogId, Boolean popular)
+    {
+        if (catalogId != null && categoryId != null)
+            throw new NotFoundException("You can filter by only either Catalog id or Category id. Not both");
+
+        if (popular != null)
+        {
+            ApiResponse<List<ProductMainDataDTO>> response = new ApiResponse<>();
+
+            List<Product> all = productRepo.findAllByPopular(popular);
+            all.forEach(i -> response.getData().add(new ProductMainDataDTO(i, lang)));
+            response.setMessage("Popular " + all.size() + " products");
+            return ResponseEntity.status(200).body(response);
+        }
+
+        ApiResponse<List<ProductMainDataDTO>> response = new ApiResponse<>();
+        List<Product> all;
+        response.setData(new ArrayList<>());
+
+        if (categoryId == null && catalogId == null)
+        {
+            all = productRepo.findAll();
+            all.forEach(i -> response.getData().add(new ProductMainDataDTO(i, lang)));
+            response.setMessage("Found " + all.size() + " products");
+            return ResponseEntity.status(200).body(response);
+        }
+        if (categoryId != null)
+        {
+            all = productRepo.findAllByCategoryId(categoryId);
+            all.forEach(i -> response.getData().add(new ProductMainDataDTO(i, lang)));
+            response.setMessage("Category(id=" + categoryId + ") " + all.size() + " products");
+
+        } else
+        {
+            all = productRepo.findAllByCatalogId(catalogId);
+            all.forEach(i -> response.getData().add(new ProductMainDataDTO(i, lang)));
+            response.setMessage("Catalog(id=" + catalogId + ") " + all.size() + " products");
+        }
         return ResponseEntity.status(200).body(response);
     }
 
-    public ResponseEntity<ApiResponse<?>> delete(Long id) {
+    public ResponseEntity<ApiResponse<?>> delete(Long id)
+    {
+        if (!productRepo.existsById(id))
+            throw new NotFoundException("Product not found by id: " + id);
+
         ApiResponse<?> response = new ApiResponse<>();
-        if (productRepository.findById(id).isEmpty()) {
-            response.setMessage("Product is not found by id: " + id);
-            return ResponseEntity.status(404).body(response);
-        }
-        productRepository.deleteById(id);
-        response.setMessage("Successfully deleted");
+        productRepo.deleteById(id);
+        response.setMessage("Product deleted");
         return ResponseEntity.status(200).body(response);
     }
 
+    public ResponseEntity<ApiResponse<Product>> update(Product newProduct)
+    {
+        if (newProduct == null)
+            throw new NotFoundException("Product not given");
+
+        Product fromDB = productRepo.findById(newProduct.getId()).orElseThrow(() -> new NotFoundException("Product not found id: " + newProduct.getId()));
+        Long productId = fromDB.getId();
+
+        //--------------Name--------------
+        if (newProduct.getName() != null)
+        {
+            fromDB.setName(newProduct.getName());
+            fromDB.setSlug(productId + "-" + SlugUtil.makeSlug(newProduct.getName()));
+        }
+
+        //--------------Tag--------------
+        if (newProduct.getTagUz() != null)
+            fromDB.setTagUz(newProduct.getTagUz());
+
+        if (newProduct.getTagRu() != null)
+            fromDB.setTagRu(newProduct.getTagRu());
+
+        if (newProduct.getTagEn() != null)
+            fromDB.setTagEn(newProduct.getTagEn());
+
+        //--------------ShortDescription--------------
+        if (newProduct.getShortDescriptionUz() != null)
+            fromDB.setShortDescriptionUz(newProduct.getShortDescriptionUz());
+
+        if (newProduct.getShortDescriptionRu() != null)
+            fromDB.setShortDescriptionRu(newProduct.getShortDescriptionRu());
+
+        if (newProduct.getShortDescriptionEn() != null)
+            fromDB.setShortDescriptionEn(newProduct.getShortDescriptionEn());
+
+        //--------------Discount--------------
+        if (newProduct.getDiscount() != null)
+        {
+            if (newProduct.getDiscount() < 100 && newProduct.getDiscount() >= 0)
+                fromDB.setDiscount(newProduct.getDiscount());
+            else
+                throw new NotFoundException("Invalid discount value: " + newProduct.getDiscount());
+        }
+
+        //--------------Original Price--------------
+        if (newProduct.getOriginalPrice() != null)
+        {
+            if (newProduct.getOriginalPrice() >= 0)
+                fromDB.setOriginalPrice(newProduct.getOriginalPrice());
+            else
+                throw new NotFoundException("Invalid original price value: " + newProduct.getOriginalPrice());
+        }
+
+        //--------------Conditions--------------
+        if (newProduct.getConditionsUz() != null)
+            fromDB.setConditionsUz(newProduct.getConditionsUz());
+
+        if (newProduct.getConditionsRu() != null)
+            fromDB.setConditionsRu(newProduct.getConditionsRu());
+
+        if (newProduct.getConditionsEn() != null)
+            fromDB.setConditionsEn(newProduct.getConditionsEn());
+
+        //--------------Active--------------
+        if (newProduct.getActive() != null)
+            fromDB.setActive(newProduct.getActive());
+
+        //--------------Popular--------------
+        if (newProduct.getActive() != null)
+            fromDB.setActive(newProduct.getActive());
+
+
+        //--------------Description--------------
+        if (newProduct.getDescriptions() != null && !newProduct.getDescriptions().isEmpty())
+        {
+            List<Description> newDescriptions = newProduct.getDescriptions();
+            List<Description> dbDescriptions = fromDB.getDescriptions();
+            if (dbDescriptions == null)
+                dbDescriptions = new ArrayList<>();
+
+            for (Description newDescription : newDescriptions)
+            {
+                if (newDescription.getId() != null)
+                {
+                    for (Description dbDescription : dbDescriptions)
+                    {
+                        if (newDescription.getId().equals(dbDescription.getId()))
+                        {
+                            boolean leastOneGiven = false;
+                            if (newDescription.getTitleUz() != null)
+                            {
+                                dbDescription.setTitleUz(newDescription.getTitleUz());
+                                leastOneGiven = true;
+                            }
+
+                            if (newDescription.getTitleRu() != null)
+                            {
+                                dbDescription.setTitleRu(newDescription.getTitleRu());
+                                leastOneGiven = true;
+                            }
+
+                            if (newDescription.getTitleEn() != null)
+                            {
+                                dbDescription.setTitleEn(newDescription.getTitleEn());
+                                leastOneGiven = true;
+                            }
+
+                            if (newDescription.getValueUz() != null)
+                            {
+                                dbDescription.setValueUz(newDescription.getValueUz());
+                                leastOneGiven = true;
+                            }
+
+                            if (newDescription.getValueRu() != null)
+                            {
+                                dbDescription.setValueRu(newDescription.getValueRu());
+                                leastOneGiven = true;
+                            }
+
+                            if (newDescription.getValueEn() != null)
+                            {
+                                dbDescription.setValueEn(newDescription.getValueEn());
+                                leastOneGiven = true;
+                            }
+
+                            //if id of description given but no other parameters not given accordingly delete it
+                            if (!leastOneGiven)
+                            {
+                                descriptionRepo.delete(newDescription.getId());
+                            }
+                        }
+
+                    }
+                }
+//                if id not given save it
+                else
+                {
+                    newDescription.setProduct(fromDB);
+                    dbDescriptions.add(newDescription);
+//                    descriptionRepo.save(newDescription);
+                }
+            }
+
+        }
+
+        //--------------Partner--------------
+        if (newProduct.getPartner() != null && newProduct.getPartner().getId() != null)
+        {
+            Long partnerId = newProduct.getPartner().getId();
+            Partner partner = partnerRepository.findById(partnerId).orElseThrow(() -> new NotFoundException("Partner not found by id: " + partnerId));
+            fromDB.setPartner(partner);
+        }
+
+
+        //--------------Catalog--------------
+        boolean catalogGiven = false;
+        if (newProduct.getCatalog() != null && newProduct.getCatalog().getId() != null)
+        {
+            Long catalogId = newProduct.getCatalog().getId();
+            Catalog catalog = catalogRepository.findById(catalogId).orElseThrow(() -> new NotFoundException("Catalog not found by id: " + catalogId));
+            fromDB.setCategory(catalog.getCategory());
+            fromDB.setCatalog(catalog);
+            catalogGiven = true;
+        }
+
+        //--------------Category--------------
+        if (newProduct.getCategory() != null && newProduct.getCategory().getId() != null)
+        {
+            if (catalogGiven)
+                throw new NotFoundException("You can only set either Catalog or Category. Not both");
+
+            Long categoryId = newProduct.getCategory().getId();
+            Category category = categoryRepo.findById(categoryId).orElseThrow(() -> new NotFoundException("Category not found by id: " + categoryId));
+            fromDB.setCategory(category);
+        }
+
+        //--------------Characteristics--------------
+        if (newProduct.getCharacteristics() != null && !newProduct.getCharacteristics().isEmpty())
+        {
+            List<Characteristic> newCharacteristics = newProduct.getCharacteristics();
+            List<Characteristic> dbCharacteristics = fromDB.getCharacteristics();
+            if (dbCharacteristics == null)
+                dbCharacteristics = new ArrayList<>();
+
+            for (Characteristic newCharacteristic : newCharacteristics)
+            {
+                if (newCharacteristic.getId() != null)
+                {
+                    for (Characteristic dbCharacteristic : dbCharacteristics)
+                    {
+                        if (newCharacteristic.getId().equals(dbCharacteristic.getId()))
+                        {
+                            boolean leastOneGiven = false;
+                            if (newCharacteristic.getTitleUz() != null)
+                            {
+                                dbCharacteristic.setTitleUz(newCharacteristic.getTitleUz());
+                                leastOneGiven = true;
+                            }
+
+                            if (newCharacteristic.getTitleRu() != null)
+                            {
+                                dbCharacteristic.setTitleRu(newCharacteristic.getTitleRu());
+                                leastOneGiven = true;
+                            }
+
+                            if (newCharacteristic.getTitleEn() != null)
+                            {
+                                dbCharacteristic.setTitleEn(newCharacteristic.getTitleEn());
+                                leastOneGiven = true;
+                            }
+
+                            if (newCharacteristic.getValueUz() != null)
+                            {
+                                dbCharacteristic.setValueUz(newCharacteristic.getValueUz());
+                                leastOneGiven = true;
+                            }
+
+                            if (newCharacteristic.getValueRu() != null)
+                            {
+                                dbCharacteristic.setValueRu(newCharacteristic.getValueRu());
+                                leastOneGiven = true;
+                            }
+
+                            if (newCharacteristic.getValueEn() != null)
+                            {
+                                dbCharacteristic.setValueEn(newCharacteristic.getValueEn());
+                                leastOneGiven = true;
+                            }
+
+                            //if not given least one parameter not given accordingly delete it
+                            if (!leastOneGiven)
+                            {
+                                System.err.println("DELETE " + newCharacteristic.getId());
+                                characteristicRepo.deleteId(newCharacteristic.getId());
+                            }
+                        }
+
+                    }
+                }
+//                if id not given save it
+                else
+                {
+                    newCharacteristic.setProduct(fromDB);
+                    dbCharacteristics.add(newCharacteristic);
+//                    descriptionRepo.save(newCharacteristics);
+                }
+            }
+
+        }
+
+        //--------------Review--------------
+        if (newProduct.getReviews() != null && !newProduct.getReviews().isEmpty())
+        {
+            List<Review> newReviews = newProduct.getReviews();
+            List<Review> dbReviews = fromDB.getReviews();
+            if (dbReviews == null)
+                dbReviews = new ArrayList<>();
+
+            for (Review newReview : newReviews)
+            {
+                if (newReview.getId() != null)
+                {
+                    for (Review dbReview : dbReviews)
+                    {
+                        if (newReview.getId().equals(dbReview.getId()))
+                        {
+                            boolean leastOneGiven = false;
+
+                            //--------------Name of doctor--------------
+                            if (newReview.getNameDoctorUz() != null)
+                            {
+                                dbReview.setNameDoctorUz(newReview.getNameDoctorUz());
+                                leastOneGiven = true;
+                            }
+
+                            if (newReview.getNameDoctorRu() != null)
+                            {
+                                dbReview.setNameDoctorRu(newReview.getNameDoctorRu());
+                                leastOneGiven = true;
+                            }
+
+                            if (newReview.getNameDoctorEn() != null)
+                            {
+                                dbReview.setNameDoctorEn(newReview.getNameDoctorEn());
+                                leastOneGiven = true;
+                            }
+
+                            //--------------Position doctor--------------
+                            if (newReview.getPositionUz() != null)
+                            {
+                                dbReview.setPositionUz(newReview.getPositionUz());
+                                leastOneGiven = true;
+                            }
+
+                            if (newReview.getPositionRu() != null)
+                            {
+                                dbReview.setPositionRu(newReview.getPositionRu());
+                                leastOneGiven = true;
+                            }
+                            if (newReview.getPositionEn() != null)
+                            {
+                                dbReview.setPositionEn(newReview.getPositionEn());
+                                leastOneGiven = true;
+                            }
+
+                            //--------------Review Options--------------
+                            if (newReview.getOptions() != null && !newReview.getOptions().isEmpty())
+                            {
+                                updateReviewOptions(dbReview, newReview.getOptions());
+                                leastOneGiven = true;
+                            }
+
+                            //if not given the least one parameter delete it
+                            if (!leastOneGiven)
+                            {
+                                reviewRepo.deleteById(newReview.getId());
+                            }
+
+                        }
+
+                    }
+
+                }
+                //if id not given save it
+                else
+                {
+                    newReview.setProduct(fromDB);
+                    dbReviews.add(newReview);
+                    newReview.getOptions().forEach(i ->
+                            {
+                                if (i.getId() != null)
+                                    throw new NotFoundException("You can't send option with id WHERE REVIEW ID NOT GIVEN");
+                                i.setReview(newReview);
+                            }
+                    );
+                    reviewRepo.save(newReview);
+                }
+            }
+
+        }
+
+        Product update = productRepo.save(fromDB);
+
+        ApiResponse<Product> response = new ApiResponse<>();
+        response.setMessage("Updated");
+        response.setData(update);
+        return ResponseEntity.ok(response);
+    }
+
+    private void updateReviewOptions(Review dbReview, List<ReviewOption> newOptions)
+    {
+        List<ReviewOption> dbOptions = dbReview.getOptions();
+        if (dbOptions == null)
+            dbOptions = new ArrayList<>();
+
+        for (ReviewOption newOption : newOptions)
+        {
+            if (newOption.getId() != null)
+            {
+
+                for (ReviewOption dbOption : dbOptions)
+                {
+                    if (dbOption.getId().equals(newOption.getId()))
+                    {
+                        boolean leastOneGiven = false;
+
+                        //--------------Title--------------
+                        if (newOption.getTitleUz() != null)
+                        {
+                            dbOption.setTitleUz(newOption.getTitleUz());
+                            leastOneGiven = true;
+                        }
+
+                        if (newOption.getTitleRu() != null)
+                        {
+                            dbOption.setTitleRu(newOption.getTitleRu());
+                            leastOneGiven = true;
+                        }
+
+                        if (newOption.getTitleEn() != null)
+                        {
+                            dbOption.setTitleEn(newOption.getTitleEn());
+                            leastOneGiven = true;
+                        }
+
+                        //--------------Value--------------
+                        if (newOption.getValueUz() != null)
+                        {
+                            dbOption.setValueUz(newOption.getValueUz());
+                            leastOneGiven = true;
+                        }
+
+                        if (newOption.getValueRu() != null)
+                        {
+                            dbOption.setValueRu(newOption.getValueRu());
+                            leastOneGiven = true;
+                        }
+
+                        if (newOption.getValueEn() != null)
+                        {
+                            dbOption.setValueEn(newOption.getValueEn());
+                            leastOneGiven = true;
+                        }
+                        //if not given the least one delete it
+                        if (!leastOneGiven)
+                        {
+                            System.err.println("DELETE OPTION " + newOption.getId());
+                            reviewOptionRepo.deleteByOptionId(newOption.getId());
+                        }
+
+                    }
+
+                }
+
+            }
+            //if id not given save it
+            else
+            {
+                newOption.setReview(dbReview);
+                dbReview.getOptions().add(newOption);
+//                reviewOptionRepo.save(newOption);
+            }
+        }
+    }
 }

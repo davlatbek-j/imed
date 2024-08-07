@@ -2,24 +2,23 @@ package uz.imed.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import uz.imed.payload.ApiResponse;
 import uz.imed.payload.PhotoDTO;
 import uz.imed.service.PhotoService;
 
-
-@RequiredArgsConstructor
-
-@Controller
+@RestController
 @RequestMapping("/photo")
+@RequiredArgsConstructor
 public class PhotoController
 {
+
     private final PhotoService photoService;
 
-    @GetMapping("/{nameOrId}")
-    public ResponseEntity<byte[]> getPhoto(@PathVariable(name = "nameOrId") String nameOrId) {
+    @GetMapping("/{name-or-id}")
+    public ResponseEntity<byte[]> getPhoto(@PathVariable(name = "name-or-id") String nameOrId)
+    {
         return photoService.findByNameOrId(nameOrId);
     }
 
@@ -30,5 +29,4 @@ public class PhotoController
     {
         return photoService.update(id, newPhoto);
     }
-
 }

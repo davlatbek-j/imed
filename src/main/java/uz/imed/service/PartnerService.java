@@ -4,24 +4,35 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.BadRequestException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartFile;
-import uz.imed.entity.AboutUsHeader;
 import uz.imed.entity.Partner;
+import uz.imed.exception.NotFoundException;
 import uz.imed.payload.ApiResponse;
 import uz.imed.payload.PartnerDTO;
+import uz.imed.payload.PartnerLogoNameDTO;
 import uz.imed.repository.PartnerRepository;
+import uz.imed.repository.ProductRepository;
+import uz.imed.util.SlugUtil;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+
 
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class PartnerService {
+
+    private static final Logger logger = LoggerFactory.getLogger(CategoryService.class);
+
+    private final ProductRepository productRepository;
 
     private final PartnerRepository partnerRepository;
 
@@ -29,134 +40,120 @@ public class PartnerService {
 
     private final ObjectMapper objectMapper;
 
-    public ResponseEntity<ApiResponse<Partner>> create(Partner partner1) {
+    public ResponseEntity<ApiResponse<Partner>> create(String json, MultipartFile logo) {
         ApiResponse<Partner> response = new ApiResponse<>();
-
-            Partner partner = new Partner();
-
+        try {
+            Partner partner = objectMapper.readValue(json, Partner.class);
+            //for getting id save empty entity and use this id, id uses for making slug.
+            partner.setId(partnerRepository.save(new Partner()).getId());
+            partner.setSlug(partner.getId() + "-" + SlugUtil.makeSlug(partner.getName()));
+            partner.setLogo(photoService.save(logo));
             partner.setActive(true);
-            partner.setTitleUz(partner1.getTitleUz());
-            partner.setTitleRu(partner1.getTitleRu());
-            partner.setTitleEng(partner1.getTitleEng());
-            partner.setMainDescriptionUz(partner1.getMainDescriptionUz());
-            partner.setMainDescriptionRu(partner1.getMainDescriptionRu());
-            partner.setMainDescriptionEng(partner1.getMainDescriptionEng());
-            partner.setDescriptionUz(partner1.getDescriptionUz());
-            partner.setDescriptionRu(partner1.getDescriptionRu());
-            partner.setDescriptionEng(partner1.getDescriptionEng());
-            Partner save = partnerRepository.save(partner);
-            String slug = save.getId() + "-" + save.getTitleEng();
-            partnerRepository.updateSlug(slug, save.getId());
-            save.setSlug(slug);
-            response.setData(save);
-            response.setMessage("Partner succesfully created");
-            return ResponseEntity.status(201).body(response);
 
-    }
-
-    public ResponseEntity<ApiResponse<Partner>> uploadImage(Long id, MultipartFile file)
-    {
-        ApiResponse<Partner> response = new ApiResponse<>();
-
-        if (!(file.getContentType().equals("image/png") ||
-                file.getContentType().equals("image/svg+xml"))) {
-            response.setMessage("Invalid file , only image/png or image/svg+xml");
+            response.setData(partnerRepository.save(partner));
+            response.setMessage("Added");
+            return ResponseEntity.ok().body(response);
+        } catch (JsonProcessingException e) {
+            response.setMessage(e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
+    }
 
+    public ResponseEntity<ApiResponse<?>> get(String slug, String lang) {
+        Partner partner = partnerRepository.findBySlug(slug).orElseThrow(() -> new NotFoundException("Partner is not found by slug: " + slug));
+        if (lang == null) {
+            ApiResponse<Partner> response = new ApiResponse<>();
+            response.setData(partner);
+            response.setMessage("All languages");
+            return ResponseEntity.ok(response);
+        } else {
+            ApiResponse<PartnerDTO> response = new ApiResponse<>();
+            response.setData(new PartnerDTO(partner, lang));
+            response.setMessage("Language: " + lang);
+            return ResponseEntity.ok(response);
+        }
+    }
+
+    public ResponseEntity<ApiResponse<?>> all(String lang, boolean onlyLogoName) {
+
+        List<Partner> partners = partnerRepository.findAll();
+        if (lang == null) {
+            ApiResponse<List<Partner>> response = new ApiResponse<>();
+            response.setData(partners);
+            response.setMessage("Found " + partners.size() + " partner(s)");
+            return ResponseEntity.ok(response);
+        } else if (onlyLogoName) {
+            ApiResponse<List<PartnerLogoNameDTO>> response = new ApiResponse<>();
+            response.setData(new ArrayList<>());
+            partners.forEach(i -> response.getData().add(new PartnerLogoNameDTO(i)));
+            response.setMessage("Found " + partners.size() + " partner(s)");
+            return ResponseEntity.ok(response);
+        } else {
+            ApiResponse<List<PartnerDTO>> response = new ApiResponse<>();
+            response.setData(new ArrayList<>());
+            partners.forEach(i -> response.getData().add(new PartnerDTO(i, lang)));
+            response.setMessage("Found " + partners.size() + " partner(s)");
+            return ResponseEntity.ok(response);
+        }
+    }
+
+    public ResponseEntity<ApiResponse<Partner>> update(Partner newPartner) {
+        ApiResponse<Partner> response = new ApiResponse<>();
+        if (newPartner == null || newPartner.getId() == null) {
+            throw new RuntimeException("Partner or id not given");
+        }
+
+        Partner fromDB = partnerRepository.findById(newPartner.getId()).orElseThrow(() -> new NotFoundException("Partner is not found by id: " + newPartner.getId()));
+
+        if (newPartner.getName() != null) {
+            fromDB.setName(newPartner.getName());
+            fromDB.setSlug(fromDB.getId() + "-" + newPartner.getName());
+        }
+
+        if (newPartner.getNoteUz() != null)
+            fromDB.setNoteUz(newPartner.getNoteUz());
+
+        if (newPartner.getNoteRu() != null)
+            fromDB.setNoteRu(newPartner.getNoteRu());
+
+        if (newPartner.getNoteEn() != null)
+            fromDB.setNoteEn(newPartner.getNoteEn());
+
+        if (newPartner.getAboutUz() != null)
+            fromDB.setAboutUz(newPartner.getAboutUz());
+
+        if (newPartner.getAboutRu() != null)
+            fromDB.setAboutRu(newPartner.getAboutRu());
+
+        if (newPartner.getAboutEn() != null)
+            fromDB.setAboutEn(newPartner.getAboutEn());
+
+        if (newPartner.getWebsite() != null)
+            fromDB.setWebsite(newPartner.getWebsite());
+
+        if (newPartner.getActive() != null)
+            fromDB.setActive(newPartner.getActive());
+
+        response.setData(partnerRepository.save(fromDB));
+        response.setMessage("Updated");
+        return ResponseEntity.ok(response);
+    }
+
+    public ResponseEntity<ApiResponse<?>> delete(Long id) {
         if (!partnerRepository.existsById(id)) {
-            response.setMessage("Data with id " + id + " does not exist");
-            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+            throw new NotFoundException("Partner is not found by id: " + id);
         }
-        Partner partner = partnerRepository.findById(id).get();
-        response.setMessage("Found data with id " + id);
-        partner.setPhoto(photoService.save(file));
-        Partner save = partnerRepository.save(partner);
-        response.setMessage("Successfully created");
-        response.setData(save);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
-    }
 
-    public ResponseEntity<ApiResponse<Partner>> findById(Long id) {
+        if (productRepository.existsByPartnerId(id)){
+            Integer i = productRepository.countByPartnerId(id);
+            String s=String.format("You can't delete partner(id=%s), because inside of partner have %s product(s). Please delete or remove this product(s) other partner first,", id,i);
+            logger.info(s);
+            throw new NotFoundException(s);
+        }
         ApiResponse<Partner> response = new ApiResponse<>();
-        Optional<Partner> optionalPartner = partnerRepository.findById(id);
-        if (optionalPartner.isEmpty()) {
-            response.setMessage("Partner is not found by id: " + id);
-            return ResponseEntity.status(404).body(response);
-        }
-        Partner partner = optionalPartner.get();
-        response.setData(partner);
-        response.setMessage("Found");
-        return ResponseEntity.status(200).body(response);
-    }
-
-    public ResponseEntity<ApiResponse<Partner>> findBySlug(String slug) {
-        ApiResponse<Partner> response = new ApiResponse<>();
-        Optional<Partner> optionalPartner = partnerRepository.findBySlug(slug);
-        if (optionalPartner.isEmpty()) {
-            response.setMessage("Partner is not found by slug: " + slug);
-            return ResponseEntity.status(404).body(response);
-        }
-        Partner partner = optionalPartner.get();
-        response.setData(partner);
-        response.setMessage("Found");
-        return ResponseEntity.status(200).body(response);
-    }
-
-    public ResponseEntity<ApiResponse<List<PartnerDTO>>> findAll(String lang) {
-        ApiResponse<List<PartnerDTO>> response = new ApiResponse<>();
-        response.setData(new ArrayList<>());
-        List<Partner> all = partnerRepository.findAll();
-        all.forEach(partner -> response.getData().add(new PartnerDTO(partner,lang)));
-        response.setMessage("Found " + all.size() + " partner(s)");
-        return ResponseEntity.status(200).body(response);
-    }
-
-   public ResponseEntity<ApiResponse<List<PartnerDTO>>> findSixPartnerForMainPage(String lang) {
-        ApiResponse<List<PartnerDTO>> response = new ApiResponse<>();
-        response.setData(new ArrayList<>());
-        List<Partner> all = partnerRepository.findAllByOrderByIdAsc();
-        all.stream()
-                .filter(Partner::isActive)
-                .limit(6).toList()
-                .forEach(partner -> response.getData().add(new PartnerDTO(partner,lang)));
-        return ResponseEntity.status(200).body(response);
-    }
-
-    public ResponseEntity<ApiResponse<List<PartnerDTO>>> findOtherPartnerBySlug(String partnerSlug,String lang) {
-        ApiResponse<List<PartnerDTO>> response = new ApiResponse<>();
-        response.setData(new ArrayList<>());
-        List<Partner> all = partnerRepository.findAllByOrderByIdAsc();
-        all.stream()
-                .filter(partner -> partner.isActive() && !partner.getSlug().equals(partnerSlug)).toList()
-                .forEach(partner -> response.getData().add(new PartnerDTO(partner,lang)));
-        return ResponseEntity.status(200).body(response);
-    }
-
-    public ResponseEntity<ApiResponse<?>> deleteById(Long id) {
-        ApiResponse<?> response = new ApiResponse<>();
-        if (partnerRepository.findById(id).isEmpty()) {
-            response.setMessage("Partner is not found by id: " + id);
-            return ResponseEntity.status(404).body(response);
-        }
         partnerRepository.deleteById(id);
-        response.setMessage("Successfully deleted");
-        return ResponseEntity.status(200).body(response);
+        response.setMessage("Deleted");
+        return ResponseEntity.ok(response);
     }
-
-    public ResponseEntity<ApiResponse<?>> changeActive(Long id) {
-        ApiResponse<?> response = new ApiResponse<>();
-        Optional<Partner> optionalPartner = partnerRepository.findById(id);
-        if (optionalPartner.isEmpty()) {
-            response.setMessage("Partner is not found by id: " + id);
-            return ResponseEntity.status(404).body(response);
-        }
-        Partner partner = optionalPartner.get();
-        boolean active = !partner.isActive();
-        partnerRepository.changeActive(id, active);
-        response.setMessage("Successfully changed! Current partner active: " + active);
-        return ResponseEntity.status(200).body(response);
-    }
-
 
 }

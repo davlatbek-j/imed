@@ -7,12 +7,10 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import uz.imed.entity.Event;
 import uz.imed.entity.Photo;
-import uz.imed.entity.translation.EventTranslation;
-import uz.imed.exeptions.NotFoundException;
+import uz.imed.exception.LanguageNotSupportException;
 
-
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Data
 @AllArgsConstructor
@@ -22,55 +20,85 @@ public class EventDTO {
 
     Long id;
 
+    String name;
+
     String slug;
 
-    String dateFrom;
-    String dateTo;
+    Photo photo;
 
-    String timeFrom;
-    String timeTo;
-
-    String city;
-
-    Photo coverPhoto;
-
-    String heading;
+    List<EventAboutDTO> abouts;
 
     String organizer;
 
+    String country;
+
+    String dateFrom;
+
+    String dateTo;
+
+    String timeFrom;
+
+    String timeTo;
+
     String address;
 
-    String text;
+    String participation;
+
+    String phoneNum;
+
+    String email;
 
     public EventDTO(Event event, String lang) {
         this.id = event.getId();
-        this.slug=event.getSlug();
-        this.dateFrom=event.getDateFrom();
-        this.dateTo=event.getDateTo();
-        this.timeFrom=event.getTimeFrom();
-        this.timeTo=event.getTimeTo();
-        this.city=event.getCity();
-        this.coverPhoto=event.getCoverPhoto();
+        this.slug = event.getSlug();
+        this.photo = event.getPhoto();
+        this.timeFrom = event.getTimeFrom();
+        this.timeTo = event.getTimeTo();
+        this.phoneNum = event.getPhoneNum();
+        this.email = event.getEmail();
 
-        EventTranslation eventTranslation=TranslationHelper.getTranslationByLang(lang,event.getEventTranslations());
-        this.heading=eventTranslation.getHeading();
-        this.organizer= eventTranslation.getOrganizer();
-        this.address=eventTranslation.getAddress();
-        this.text=eventTranslation.getText();
+        switch (lang.toLowerCase()) {
 
+            case "uz": {
+                this.name = event.getNameUz();
+                this.organizer = event.getOrganizerUz();
+                this.country = event.getCountryUz();
+                this.dateFrom = event.getDateFromUz();
+                this.dateTo = event.getDateToUz();
+                this.address = event.getAddressUz();
+                this.participation = event.getParticipationUz();
+                break;
+            }
 
-    }
+            case "ru": {
+                this.name = event.getNameRu();
+                this.organizer = event.getOrganizerRu();
+                this.country = event.getCountryRu();
+                this.dateFrom = event.getDateFromRu();
+                this.dateTo = event.getDateToRu();
+                this.address = event.getAddressRu();
+                this.participation = event.getParticipationRu();
+                break;
+            }
 
-    static class TranslationHelper {
-        static EventTranslation getTranslationByLang(String lang, List<EventTranslation> clientTranslations) {
-            return clientTranslations
-                    .stream()
-                    .filter(translation -> translation.getLanguage().equals(lang))
-                    .findFirst()
-                    .orElseThrow(() -> new NotFoundException("Language not supported: " + lang));
+            case "en": {
+                this.name = event.getNameEn();
+                this.organizer = event.getOrganizerEn();
+                this.country = event.getCountryEn();
+                this.dateFrom = event.getDateFromEn();
+                this.dateTo = event.getDateToEn();
+                this.address = event.getAddressEn();
+                this.participation = event.getParticipationEn();
+                break;
+            }
+
+            default:
+                throw new LanguageNotSupportException("Language not supported: " + lang);
 
         }
+        this.abouts = event.getAbouts().stream()
+                .map(eventAbout -> new EventAboutDTO(eventAbout, lang))
+                .collect(Collectors.toList());
     }
-
 
 }

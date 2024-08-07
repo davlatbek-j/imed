@@ -1,24 +1,15 @@
 package uz.imed.controller;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.Part;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
 import uz.imed.entity.New;
 import uz.imed.payload.ApiResponse;
-import uz.imed.payload.NewDTO;
 import uz.imed.service.NewService;
 
-import java.io.*;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.List;
-
 @RestController
-@RequestMapping("/news")
+@RequestMapping("/v1/new")
 @RequiredArgsConstructor
 public class NewController {
 
@@ -26,46 +17,42 @@ public class NewController {
 
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<New>> create(
-            @RequestParam(value = "json") String client,
-            @RequestPart(value = "photo") MultipartFile photo
+            @RequestParam(value = "json") String newness,
+            MultipartHttpServletRequest request
     ) {
-        return newService.create(client, photo);
+        return newService.create(newness, request);
     }
 
     @GetMapping("/get/{slug}")
-    public ResponseEntity<ApiResponse<NewDTO>> findById(
+    public ResponseEntity<ApiResponse<?>> findBySlug(
             @PathVariable String slug,
-            @RequestHeader(value = "Accept-Language") String lang
+            @RequestHeader(value = "Accept-Language", required = false) String lang
     ) {
         return newService.findBySlug(slug, lang);
     }
 
-    @GetMapping("/get-full-data/{id}")
-    public ResponseEntity<ApiResponse<New>> findFullData(
-            @PathVariable Long id
-    ) {
-        return newService.findFullDataById(id);
-    }
-
     @GetMapping("/get-all")
-    public ResponseEntity<ApiResponse<List<NewDTO>>> findAll(
-            @RequestHeader(value = "Accept-Language") String lang
+    public ResponseEntity<ApiResponse<?>> findAll(
+            @RequestHeader(value = "Accept-Language", required = false) String lang,
+            @RequestParam(value = "size", defaultValue = "10", required = false) Integer size,
+            @RequestParam(value = "page", defaultValue = "1") Integer page
     ) {
-        return newService.findAll(lang);
+        return newService.findAllByPageNation(lang, page, size);
     }
 
     @PutMapping("/update")
     public ResponseEntity<ApiResponse<New>> update(
-            @RequestBody New newn
+            @RequestBody New newness
     ) {
-        return newService.update(newn);
+        return newService.update(newness);
     }
 
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<ApiResponse<?>> delete(
             @PathVariable Long id
     ) {
-        return newService.deleteById(id);
+        return newService.delete(id);
     }
+
 
 }

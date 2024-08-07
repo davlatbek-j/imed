@@ -4,60 +4,53 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import uz.imed.entity.AboutUsHeader;
 import uz.imed.entity.Certificate;
 import uz.imed.payload.ApiResponse;
 import uz.imed.service.CertificateService;
 
 @RestController
-@RequestMapping("/api/certificate")
+@RequestMapping("/v1/certificate")
 @RequiredArgsConstructor
 public class CertificateController {
-    private  final CertificateService certificateService;
+
+    private final CertificateService certificateService;
 
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<Certificate>> create(
-            @RequestParam("json") String json,
-            @RequestParam("photo") MultipartFile file
-    ) {return certificateService.create(json,file);
+            @RequestParam(value = "json") String certificate,
+            @RequestPart(value = "photo") MultipartFile photo
+    ) {
+        return certificateService.create(certificate, photo);
     }
 
+    @GetMapping("/get/{slug}")
+    public ResponseEntity<ApiResponse<?>> findBySlug(
+            @PathVariable String slug,
+            @RequestHeader(value = "Accept-Language", required = false) String lang
+    ) {
+        return certificateService.findBySlug(slug, lang);
+    }
 
     @GetMapping("/get-all")
-    public ResponseEntity<ApiResponse<?>> findAllAboutUsHeader(
-            @RequestHeader(value = "Accept-Language", required = false) String lang) {
-        return certificateService.findAll(lang);
-    }
-
-    @GetMapping("/get-by-id/{id}")
-    public ResponseEntity<ApiResponse<?>> findAboutUsHeaderById(
-            @PathVariable Long id,
-            @RequestHeader(value = "Accept-Language", required = false) String lang) {
-        return certificateService.getById(id,lang);
-    }
-
-    @GetMapping("/by-slug/{slug}")
-    public ResponseEntity<ApiResponse<?>> getBySlug(
-            @PathVariable(name = "slug") String slug,
-            @RequestHeader(value = "Accept-Language", required = false) String lang
-
-    ){
-        return certificateService.get(slug,lang);
+    public ResponseEntity<ApiResponse<?>> findAll(
+            @RequestHeader(value = "Accept-Language", required = false) String lang,
+            @RequestParam(value = "onlyPhoto", required = false, defaultValue = "false") Boolean onlyPhoto
+    ) {
+        return certificateService.findAll(lang, onlyPhoto);
     }
 
     @PutMapping("/update")
-    public ResponseEntity<ApiResponse<Certificate>> updateAboutUsHeader(
-            @RequestParam("json") String json
+    public ResponseEntity<ApiResponse<Certificate>> update(
+            @RequestBody Certificate certificate
     ) {
-        return certificateService.update(json);
+        return certificateService.update(certificate);
     }
 
     @DeleteMapping("/delete/{id}")
-
-    public ResponseEntity<ApiResponse<Certificate>> delete(
+    public ResponseEntity<ApiResponse<?>> delete(
             @PathVariable Long id
-    )
-    {
+    ) {
         return certificateService.delete(id);
     }
+
 }
