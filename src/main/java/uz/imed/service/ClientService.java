@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import uz.imed.entity.Client;
-import uz.imed.exeptions.NotFoundException;
+import uz.imed.exception.NotFoundException;
 import uz.imed.payload.ApiResponse;
 import uz.imed.payload.ClientDTO;
 import uz.imed.payload.ClientMainDataDTO;
