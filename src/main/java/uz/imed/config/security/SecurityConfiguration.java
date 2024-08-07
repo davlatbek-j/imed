@@ -47,10 +47,10 @@ public class SecurityConfiguration
 
     private RequestMatcher[] getMatches()
     {
-        return new RequestMatcher[]
+        return new RequestMatcher[]///v1 v1
                 {
                         //Auth
-                        new AntPathRequestMatcher("/api/auth/login", "POST"),
+                        new AntPathRequestMatcher("/v1/auth/login", "POST"),
                         //About-us
                         new AntPathRequestMatcher("/about-us/get", "GET"),
                         new AntPathRequestMatcher("/about-us/header/get", "GET"),

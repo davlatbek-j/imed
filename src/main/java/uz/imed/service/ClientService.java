@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import uz.imed.entity.Client;
 import uz.imed.exception.NotFoundException;
 import uz.imed.payload.ApiResponse;
+import uz.imed.payload.ClientDTO;
 import uz.imed.payload.ClientMainDataDTO;
 import uz.imed.repository.ClientRepository;
 import uz.imed.util.SlugUtil;
