@@ -65,6 +65,8 @@ public class ProductService
                 product.getDescriptions().forEach(i -> i.setProduct(product));
             if (product.getCharacteristics() != null)
                 product.getCharacteristics().forEach(i -> i.setProduct(product));
+
+            //this is optional. you can set Reviews while creating , or with separately api
             if (product.getReviews() != null)
             {
                 product.getReviews().forEach(i ->
