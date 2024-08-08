@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import uz.imed.entity.Event;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -20,4 +21,10 @@ public interface EventRepository extends JpaRepository<Event, Long> {
 
     Optional<Event> findBySlug(String slug);
 
+    List<Event> findAllByAddressEnContainingIgnoreCaseOrAddressRuContainingIgnoreCaseOrAddressUzContainingIgnoreCase(String addressEn, String addressRu, String addressUz);
+
+    @Query(value = "SELECT * FROM event WHERE LOWER(address_uz)=LOWER(:address) OR LOWER(address_ru)=LOWER(:address) OR LOWER(address_en)=LOWER(:address)",nativeQuery = true)
+    List<Event> findAllByAddress(@Param(value = "address") String address);
+
+    List<Event> findAllByAddressRuContainingIgnoreCase(String addressRu);
 }

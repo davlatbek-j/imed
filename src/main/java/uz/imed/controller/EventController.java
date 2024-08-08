@@ -35,9 +35,10 @@ public class EventController {
     public ResponseEntity<ApiResponse<?>> findAll(
             @RequestHeader(value = "Accept-Language",required = false) String lang,
             @RequestParam(value = "page", defaultValue = "1") Integer page,
-            @RequestParam(value = "size", required = false, defaultValue = "10") Integer size
+            @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
+            @RequestParam(value = "city", required = false) String city
     ) {
-        return eventService.findAllByPageNation(lang,page,size);
+        return eventService.findAllByPageNation(lang,page,size,city);
     }
 
     @PutMapping("/update")

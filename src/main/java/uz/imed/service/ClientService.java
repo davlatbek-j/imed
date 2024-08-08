@@ -91,7 +91,7 @@ public class ClientService
 
     public ResponseEntity<ApiResponse<?>> findAll(String lang, int page, int size)
     {
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page - 1, size);
 
         ApiResponse<List<ClientMainDataDTO>> response = new ApiResponse<>();
         List<Client> clients = clientRepository.findAll(pageable).getContent();

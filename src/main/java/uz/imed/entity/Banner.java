@@ -29,7 +29,7 @@ public class Banner extends BaseEntity
     boolean addable = true;
 
     @JsonProperty(value = "data")
-    @OneToMany
+    @OneToMany(mappedBy = "banner")
     List<BannerSlider> sliders;
 }
 

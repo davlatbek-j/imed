@@ -28,6 +28,7 @@ public class CommercialOffer
 
     String mail;
 
+    @Column(length = 1000)
     String message;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "commercialOffer")

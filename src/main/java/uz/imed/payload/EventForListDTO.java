@@ -21,6 +21,8 @@ public class EventForListDTO {
 
     String name;
 
+    String address;
+
     Photo photo;
 
     public EventForListDTO(Event event, String lang) {
@@ -32,21 +34,23 @@ public class EventForListDTO {
 
             case "uz": {
                 this.name = event.getNameUz();
+                this.address = event.getAddressUz();
                 break;
             }
 
             case "ru": {
                 this.name = event.getNameRu();
+                this.address = event.getAddressRu();
                 break;
             }
 
             case "en": {
                 this.name = event.getNameEn();
+                this.address = event.getAddressEn();
                 break;
             }
             default:
                 throw new LanguageNotSupportException("Language not supported: " + lang);
         }
     }
-
 }

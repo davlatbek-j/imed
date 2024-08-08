@@ -32,9 +32,4 @@ public class Photo {
     @JsonIgnore
     String type;
 
-    public Photo(String name, String filepath, String httpUrl) {
-        this.name = name;
-        this.filepath = filepath;
-        this.httpUrl = httpUrl;
-    }
 }

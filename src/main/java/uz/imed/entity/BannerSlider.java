@@ -1,17 +1,15 @@
 package uz.imed.entity;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import uz.imed.entity.BaseEntity;
-import uz.imed.entity.Photo;
 
 @Data
 @NoArgsConstructor
@@ -26,6 +24,10 @@ public class BannerSlider extends BaseEntity
     String link;
 
     Boolean active;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
+    Banner banner;
 
     public BannerSlider(String link, Boolean active, Photo photo)
     {

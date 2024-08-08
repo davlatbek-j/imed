@@ -37,7 +37,7 @@ public class ClientController
     @GetMapping("/all")
     public ResponseEntity<ApiResponse<?>> findAll(
             @RequestHeader(value = "Accept-Language") String lang,
-            @RequestParam(value = "page", required = false, defaultValue = "0") int page,
+            @RequestParam(value = "page", required = false, defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "12") int size)
     {
         return clientService.findAll(lang, page, size);

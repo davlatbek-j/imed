@@ -25,7 +25,8 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class EventService {
+public class EventService
+{
 
     private final EventRepository eventRepository;
 
@@ -35,9 +36,11 @@ public class EventService {
 
     private final PhotoService photoService;
 
-    public ResponseEntity<ApiResponse<Event>> create(String json, MultipartFile photoFile) {
+    public ResponseEntity<ApiResponse<Event>> create(String json, MultipartFile photoFile)
+    {
         ApiResponse<Event> response = new ApiResponse<>();
-        try {
+        try
+        {
             Event event = objectMapper.readValue(json, Event.class);
             event.setPhoto(photoService.save(photoFile));
             Event save = eventRepository.save(event);
@@ -46,17 +49,20 @@ public class EventService {
             save.setSlug(slug);
             response.setData(save);
             return ResponseEntity.ok(response);
-        } catch (JsonProcessingException e) {
+        } catch (JsonProcessingException e)
+        {
             response.setMessage(e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
     }
 
-    public ResponseEntity<ApiResponse<?>> findBySlug(String slug, String lang) {
+    public ResponseEntity<ApiResponse<?>> findBySlug(String slug, String lang)
+    {
         Event event = eventRepository.findBySlug(slug)
                 .orElseThrow(() -> new NotFoundException("Event is not found by slug: " + slug));
-        if (lang != null) {
+        if (lang != null)
+        {
             ApiResponse<EventDTO> response = new ApiResponse<>();
             response.setData(new EventDTO(event, lang));
             return ResponseEntity.ok(response);
@@ -66,149 +72,203 @@ public class EventService {
         return ResponseEntity.ok(response);
     }
 
-    public ResponseEntity<ApiResponse<?>> findAllByPageNation(String lang, int page, int size){
+    public ResponseEntity<ApiResponse<?>> findAllByPageNation(String lang, int page, int size, String city)
+    {
+        if (city != null && lang == null)
+            throw new NotFoundException("If you filter by city, you must send a 'Accept-Language'");
+
         Pageable pageable = PageRequest.of(page - 1, size);
         Page<Event> all = eventRepository.findAll(pageable);
-        if (lang!=null){
-            ApiResponse<List<EventForListDTO>> response=new ApiResponse<>();
+        if (lang != null)
+        {
+            ApiResponse<List<EventForListDTO>> response = new ApiResponse<>();
             response.setData(new ArrayList<>());
-            all.forEach(event -> response.getData().add(new EventForListDTO(event,lang)));
+            if (city != null)
+            {
+                List<Event> byLang = eventRepository.findAllByAddress(city);
+                byLang.forEach(event -> response.getData().add(new EventForListDTO(event, lang)));
+                response.setMessage("Found " + byLang.size() + " event(s) by city " + city);
+                return ResponseEntity.ok(response);
+            }
+            all.forEach(event -> response.getData().add(new EventForListDTO(event, lang)));
+            response.setMessage("Found " + all.getTotalElements() + " event(s)");
             return ResponseEntity.ok(response);
         }
-        ApiResponse<List<Event>> response=new ApiResponse<>();
+        ApiResponse<List<Event>> response = new ApiResponse<>();
         response.setData(new ArrayList<>());
         all.forEach(event -> response.getData().add(event));
         return ResponseEntity.ok(response);
     }
 
-    public ResponseEntity<ApiResponse<Event>> update(Event event) {
+    public ResponseEntity<ApiResponse<Event>> update(Event event)
+    {
         ApiResponse<Event> response = new ApiResponse<>();
         Event fromDb = eventRepository.findById(event.getId())
                 .orElseThrow(() -> new NotFoundException("Event is not found by id: " + event.getId()));
 
-        if (event.getNameEn() != null) {
+        if (event.getNameEn() != null)
+        {
             fromDb.setNameEn(event.getNameEn());
         }
-        if (event.getNameUz() != null) {
+        if (event.getNameUz() != null)
+        {
             fromDb.setNameUz(event.getNameUz());
             String slug = fromDb.getId() + "-" + SlugUtil.makeSlug(event.getNameUz());
             fromDb.setSlug(slug);
         }
-        if (event.getNameRu() != null) {
+        if (event.getNameRu() != null)
+        {
             fromDb.setNameRu(event.getNameRu());
         }
 
-        if (event.getOrganizerEn() != null) {
+        if (event.getOrganizerEn() != null)
+        {
             fromDb.setOrganizerEn(event.getOrganizerEn());
         }
-        if (event.getOrganizerUz() != null) {
+        if (event.getOrganizerUz() != null)
+        {
             fromDb.setOrganizerUz(event.getOrganizerUz());
         }
-        if (event.getOrganizerRu() != null) {
+        if (event.getOrganizerRu() != null)
+        {
             fromDb.setOrganizerRu(event.getOrganizerRu());
         }
 
-        if (event.getCountryEn() != null) {
+        if (event.getCountryEn() != null)
+        {
             fromDb.setCountryEn(event.getCountryEn());
         }
-        if (event.getCountryUz() != null) {
+        if (event.getCountryUz() != null)
+        {
             fromDb.setCountryUz(event.getCountryUz());
         }
-        if (event.getCountryRu() != null) {
+        if (event.getCountryRu() != null)
+        {
             fromDb.setCountryRu(event.getCountryRu());
         }
 
-        if (event.getDateFromEn() != null) {
+        if (event.getDateFromEn() != null)
+        {
             fromDb.setDateFromEn(event.getDateFromEn());
         }
-        if (event.getDateFromUz() != null) {
+        if (event.getDateFromUz() != null)
+        {
             fromDb.setDateFromUz(event.getDateFromUz());
         }
-        if (event.getDateFromRu() != null) {
+        if (event.getDateFromRu() != null)
+        {
             fromDb.setDateFromRu(event.getDateFromRu());
         }
 
-        if (event.getDateToEn() != null) {
+        if (event.getDateToEn() != null)
+        {
             fromDb.setDateToEn(event.getDateToEn());
         }
-        if (event.getDateToUz() != null) {
+        if (event.getDateToUz() != null)
+        {
             fromDb.setDateToUz(event.getDateToUz());
         }
-        if (event.getDateToRu() != null) {
+        if (event.getDateToRu() != null)
+        {
             fromDb.setDateToRu(event.getDateToRu());
         }
 
-        if (event.getTimeFrom() != null) {
+        if (event.getTimeFrom() != null)
+        {
             fromDb.setTimeFrom(event.getTimeFrom());
         }
-        if (event.getTimeTo() != null) {
+        if (event.getTimeTo() != null)
+        {
             fromDb.setTimeTo(event.getTimeTo());
         }
 
-        if (event.getAddressEn() != null) {
+        if (event.getAddressEn() != null)
+        {
             fromDb.setAddressEn(event.getAddressEn());
         }
-        if (event.getAddressUz() != null) {
+        if (event.getAddressUz() != null)
+        {
             fromDb.setAddressUz(event.getAddressUz());
         }
-        if (event.getAddressRu() != null) {
+        if (event.getAddressRu() != null)
+        {
             fromDb.setAddressRu(event.getAddressRu());
         }
 
-        if (event.getParticipationEn() != null) {
+        if (event.getParticipationEn() != null)
+        {
             fromDb.setParticipationEn(event.getParticipationEn());
         }
-        if (event.getParticipationUz() != null) {
+        if (event.getParticipationUz() != null)
+        {
             fromDb.setParticipationUz(event.getParticipationUz());
         }
-        if (event.getParticipationRu() != null) {
+        if (event.getParticipationRu() != null)
+        {
             fromDb.setParticipationRu(event.getParticipationRu());
         }
 
-        if (event.getPhoneNum() != null) {
+        if (event.getPhoneNum() != null)
+        {
             fromDb.setPhoneNum(event.getPhoneNum());
         }
-        if (event.getEmail() != null) {
+        if (event.getEmail() != null)
+        {
             fromDb.setEmail(event.getEmail());
         }
-        if (event.getAbouts() != null && !event.getAbouts().isEmpty()) {
+        if (event.getAbouts() != null && !event.getAbouts().isEmpty())
+        {
             List<EventAbout> newEventAbouts = event.getAbouts();
             List<EventAbout> dbEventAbouts = fromDb.getAbouts();
 
-            for (EventAbout newEventAbout : newEventAbouts) {
-                Long id = newEventAbout.getId();
-                for (EventAbout dbEventAbout : dbEventAbouts) {
-                    if (dbEventAbout.getId().equals(id)) {
+            if (dbEventAbouts == null)
+                dbEventAbouts = new ArrayList<>();
 
-                        if (newEventAbout.getTitleEn() != null) {
+            for (EventAbout newEventAbout : newEventAbouts)
+            {
+                Long id = newEventAbout.getId();
+                for (EventAbout dbEventAbout : dbEventAbouts)
+                {
+                    if (dbEventAbout.getId().equals(id))
+                    {
+
+                        if (newEventAbout.getTitleEn() != null)
+                        {
                             dbEventAbout.setTitleEn(newEventAbout.getTitleEn());
                         }
-                        if (newEventAbout.getTitleUz() != null) {
+                        if (newEventAbout.getTitleUz() != null)
+                        {
                             dbEventAbout.setTitleUz(newEventAbout.getTitleUz());
                         }
-                        if (newEventAbout.getTitleRu() != null) {
+                        if (newEventAbout.getTitleRu() != null)
+                        {
                             dbEventAbout.setTitleRu(newEventAbout.getTitleRu());
                         }
 
-                        if (newEventAbout.getTextEn() != null) {
+                        if (newEventAbout.getTextEn() != null)
+                        {
                             dbEventAbout.setTextEn(newEventAbout.getTextEn());
                         }
-                        if (newEventAbout.getTextUz() != null) {
+                        if (newEventAbout.getTextUz() != null)
+                        {
                             dbEventAbout.setTextUz(newEventAbout.getTextUz());
                         }
-                        if (newEventAbout.getTextRu() != null) {
+                        if (newEventAbout.getTextRu() != null)
+                        {
                             dbEventAbout.setTextRu(newEventAbout.getTextRu());
                         }
 
                         if (newEventAbout.getTitleEn() == null && newEventAbout.getTitleRu() == null && newEventAbout.getTitleUz() == null
-                                && newEventAbout.getTextUz() == null && newEventAbout.getTextRu() == null && newEventAbout.getTextEn() == null) {
+                                && newEventAbout.getTextUz() == null && newEventAbout.getTextRu() == null && newEventAbout.getTextEn() == null)
+                        {
                             dbEventAbouts.remove(newEventAbout);
-                            eventAboutRepository.deleteById(newEventAbout.getId());
+                            eventAboutRepository.delete(newEventAbout.getId());
                         }
 
                     }
                 }
-                if (id == null) {
+                if (id == null)
+                {
                     newEventAbout.setEvent(fromDb);
                     dbEventAbouts.add(newEventAbout);
                 }
@@ -220,9 +280,11 @@ public class EventService {
         return ResponseEntity.ok(response);
     }
 
-    public ResponseEntity<ApiResponse<?>> delete(Long id) {
+    public ResponseEntity<ApiResponse<?>> delete(Long id)
+    {
         ApiResponse<?> response = new ApiResponse<>();
-        if (!eventRepository.existsById(id)) {
+        if (!eventRepository.existsById(id))
+        {
             throw new NotFoundException("Event is not found by id: " + id);
         }
         eventRepository.deleteById(id);

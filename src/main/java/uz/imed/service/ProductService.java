@@ -3,8 +3,6 @@ package uz.imed.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.autoconfigure.web.client.RestClientAutoConfiguration;
-import org.springframework.boot.web.servlet.filter.OrderedFormContentFilter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,11 +28,9 @@ public class ProductService
     private final PartnerRepository partnerRepository;
     private final CatalogRepository catalogRepository;
     private final CategoryRepository categoryRepo;
-    private final OrderedFormContentFilter formContentFilter;
     private final DescriptionRepository descriptionRepo;
     private final ReviewOptionRepository reviewOptionRepo;
     private final ReviewRepository reviewRepo;
-    private final RestClientAutoConfiguration restClientAutoConfiguration;
     private final CharacteristicRepository characteristicRepo;
 
     public ResponseEntity<ApiResponse<Product>> add(String json, List<MultipartFile> gallery, List<MultipartFile> reviewDoctorsPhoto)
@@ -70,11 +66,20 @@ public class ProductService
             if (product.getCharacteristics() != null)
                 product.getCharacteristics().forEach(i -> i.setProduct(product));
             if (product.getReviews() != null)
+            {
                 product.getReviews().forEach(i ->
                 {
                     i.getOptions().forEach(j -> j.setReview(i));
                     i.setProduct(product);
                 });
+                if (reviewDoctorsPhoto == null || product.getReviews().size() != reviewDoctorsPhoto.size())
+                    throw new NotFoundException("Number of review(s): " + product.getReviews().size() +
+                            "\nNumber of 'review-doctors-photo': " + (reviewDoctorsPhoto != null ? reviewDoctorsPhoto.size() : 0) + "\nBoth size(s) must match!!!");
+
+                for (int i = 0; i < reviewDoctorsPhoto.size(); i++)
+                    product.getReviews().get(i).setDoctorPhoto(photoService.save(reviewDoctorsPhoto.get(i)));
+
+            }
 
             product.setGallery(new ArrayList<>());
             gallery.forEach(i -> product.getGallery().add(photoService.save(i)));

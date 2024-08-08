@@ -33,8 +33,8 @@ public class SecurityConfiguration
                 .authorizeHttpRequests(authorizationRequest ->
                         authorizationRequest
                                 .requestMatchers(
-//                                        "/**"
-                                        getMatches()
+                                        "/**"
+//                                        getMatches()
                                 )
                                 .permitAll()
                                 .anyRequest().authenticated())

@@ -3,7 +3,6 @@ package uz.imed.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,7 +13,6 @@ import uz.imed.payload.ApiResponse;
 import uz.imed.repository.BannerRepository;
 import uz.imed.repository.BannerSliderRepository;
 import uz.imed.repository.PhotoRepository;
-import uz.imed.service.PhotoService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -96,14 +94,15 @@ public class BannerService
         }
         Banner fromDb = all.get(0);
 
-        for (BannerSlider newSlider : newBanner.getSliders())
-        {
-            if (newSlider.getId() != null)
+        if (newBanner != null)
+            for (BannerSlider newSlider : newBanner.getSliders())
             {
-                newSlider.setPhoto(photoRepository.findByIdOrName(newSlider.getPhoto().getId(), null));
-                sliderRepo.save(newSlider);
+                if (newSlider.getId() != null)
+                {
+                    newSlider.setPhoto(photoRepository.findByIdOrName(newSlider.getPhoto().getId(), null));
+                    sliderRepo.save(newSlider);
+                }
             }
-        }
 
         fromDb.setSliders(newBanner.getSliders());
         bannerRepository.save(fromDb);
