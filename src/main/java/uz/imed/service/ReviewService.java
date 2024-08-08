@@ -205,7 +205,7 @@ public class ReviewService
     {
         List<Review> all = reviewRepo.findAllByProductId(productId);
 
-        if (lang == null)
+        if (lang != null)
         {
             ApiResponse<List<ReviewDTO>> response = new ApiResponse<>();
             response.setData(new ArrayList<>());
