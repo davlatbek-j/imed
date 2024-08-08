@@ -23,7 +23,10 @@ public class ProductMainDataDTO
 
     String shortDescription;
 
-    List<String> tag;
+    //    List<String> tag;
+    Boolean aNew;
+
+    Boolean sale;
 
     Double originalPrice;
 
@@ -45,6 +48,9 @@ public class ProductMainDataDTO
         this.active = entity.getActive();
         this.popular = entity.getPopular();
         this.gallery = new ArrayList<>();
+        this.aNew = entity.getANew();
+        this.sale = entity.getSale();
+
         entity.getGallery().forEach(g -> gallery.add(new PhotoDTO(g)));
 
         switch (lang.toLowerCase())
@@ -52,17 +58,17 @@ public class ProductMainDataDTO
             case "uz" ->
             {
                 this.shortDescription = entity.getShortDescriptionUz();
-                this.tag = entity.getTagUz();
+//                this.tag = entity.getTagUz();
             }
             case "en" ->
             {
                 this.shortDescription = entity.getShortDescriptionEn();
-                this.tag = entity.getTagEn();
+//                this.tag = entity.getTagEn();
             }
             case "ru" ->
             {
                 this.shortDescription = entity.getShortDescriptionRu();
-                this.tag = entity.getTagRu();
+//                this.tag = entity.getTagRu();
             }
             default -> throw new LanguageNotSupportException("Language not supported: " + lang);
         }

@@ -25,7 +25,11 @@ public class ProductDTO
 
     String slug;
 
-    List<String> tag;
+//    List<String> tag;
+
+    Boolean aNew;
+
+    Boolean sale;
 
     String shortDescription;
 
@@ -66,6 +70,8 @@ public class ProductDTO
         this.name = entity.getName();
         this.slug = entity.getSlug();
         this.descriptions = new ArrayList<>();
+        this.aNew = entity.getANew();
+        this.sale = entity.getSale();
         entity.getDescriptions().forEach(i -> descriptions.add(new DescriptionDTO(i, lang)));
         this.discount = entity.getDiscount();
         this.originalPrice = entity.getOriginalPrice();
@@ -85,19 +91,19 @@ public class ProductDTO
         {
             case "uz" ->
             {
-                this.tag = entity.getTagUz();
+//                this.tag = entity.getTagUz();
                 this.shortDescription = entity.getShortDescriptionUz();
                 this.conditions = entity.getConditionsUz();
             }
             case "ru" ->
             {
-                this.tag = entity.getTagRu();
+//                this.tag = entity.getTagRu();
                 this.shortDescription = entity.getShortDescriptionRu();
                 this.conditions = entity.getConditionsRu();
             }
             case "en" ->
             {
-                this.tag = entity.getTagEn();
+//                this.tag = entity.getTagEn();
                 this.shortDescription = entity.getShortDescriptionEn();
                 this.conditions = entity.getConditionsEn();
             }

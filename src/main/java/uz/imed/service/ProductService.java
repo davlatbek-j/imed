@@ -195,14 +195,20 @@ public class ProductService
         }
 
         //--------------Tag--------------
-        if (newProduct.getTagUz() != null)
+/*        if (newProduct.getTagUz() != null)
             fromDB.setTagUz(newProduct.getTagUz());
 
         if (newProduct.getTagRu() != null)
             fromDB.setTagRu(newProduct.getTagRu());
 
         if (newProduct.getTagEn() != null)
-            fromDB.setTagEn(newProduct.getTagEn());
+            fromDB.setTagEn(newProduct.getTagEn());*/
+
+        if (newProduct.getANew() != null)
+            fromDB.setANew(newProduct.getANew());
+
+        if (newProduct.getSale() != null)
+            fromDB.setSale(newProduct.getSale());
 
         //--------------ShortDescription--------------
         if (newProduct.getShortDescriptionUz() != null)

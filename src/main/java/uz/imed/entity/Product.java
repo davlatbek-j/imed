@@ -29,12 +29,17 @@ public class Product
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     String slug;
 
-    @ElementCollection
-    List<String> tagUz;
-    @ElementCollection
-    List<String> tagRu;
-    @ElementCollection
-    List<String> tagEn;
+//    @ElementCollection
+//    List<String> tagUz;
+//    @ElementCollection
+//    List<String> tagRu;
+//    @ElementCollection
+//    List<String> tagEn;
+
+    @JsonProperty(value = "new")
+    Boolean aNew;
+
+    Boolean sale;
 
     @Column(length = 500)
     String shortDescriptionUz;
