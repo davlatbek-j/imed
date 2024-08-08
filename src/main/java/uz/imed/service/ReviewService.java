@@ -201,14 +201,21 @@ public class ReviewService
         return ResponseEntity.ok(response);
     }
 
-    public ResponseEntity<ApiResponse<List<ReviewDTO>>> get(String lang, Long productId)
+    public ResponseEntity<ApiResponse<?>> get(String lang, Long productId)
     {
         List<Review> all = reviewRepo.findAllByProductId(productId);
 
-        ApiResponse<List<ReviewDTO>> response = new ApiResponse<>();
-        response.setData(new ArrayList<>());
-        all.forEach(i -> response.getData().add(new ReviewDTO(i, lang)));
-        response.setMessage("Found " + all.size() + " review(s)");
+        if (lang == null)
+        {
+            ApiResponse<List<ReviewDTO>> response = new ApiResponse<>();
+            response.setData(new ArrayList<>());
+            all.forEach(i -> response.getData().add(new ReviewDTO(i, lang)));
+            response.setMessage("Found " + all.size() + " review(s)");
+            return ResponseEntity.ok(response);
+        }
+        ApiResponse<List<Review>> response = new ApiResponse<>();
+        response.setData(all);
+        response.setMessage("All languages " + all.size() + " review(s)");
         return ResponseEntity.ok(response);
     }
 }

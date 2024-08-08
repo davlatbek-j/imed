@@ -8,7 +8,6 @@ import org.springframework.web.multipart.MultipartFile;
 import uz.imed.entity.Product;
 import uz.imed.entity.Review;
 import uz.imed.payload.ApiResponse;
-import uz.imed.payload.ReviewDTO;
 import uz.imed.service.ProductService;
 import uz.imed.service.ReviewService;
 
@@ -79,8 +78,8 @@ public class ProductController
     }
 
     @GetMapping("/review")
-    public ResponseEntity<ApiResponse<List<ReviewDTO>>> allReview(
-            @RequestHeader(value = "Accept-Language") String lang,
+    public ResponseEntity<ApiResponse<?>> allReview(
+            @RequestHeader(value = "Accept-Language", required = false) String lang,
             @RequestParam(value = "product-id") Long productId)
     {
         return reviewService.get(lang, productId);
