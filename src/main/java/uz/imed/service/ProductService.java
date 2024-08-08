@@ -436,7 +436,7 @@ public class ProductService
         }
 
         //--------------Review--------------
-        if (newProduct.getReviews() != null && !newProduct.getReviews().isEmpty())
+        /*if (newProduct.getReviews() != null && !newProduct.getReviews().isEmpty())
         {
             List<Review> newReviews = newProduct.getReviews();
             List<Review> dbReviews = fromDB.getReviews();
@@ -524,7 +524,7 @@ public class ProductService
                 }
             }
 
-        }
+        }*/
 
         Product update = productRepo.save(fromDB);
 

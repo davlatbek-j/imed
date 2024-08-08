@@ -6,8 +6,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import uz.imed.entity.Product;
+import uz.imed.entity.Review;
 import uz.imed.payload.ApiResponse;
+import uz.imed.payload.ReviewDTO;
 import uz.imed.service.ProductService;
+import uz.imed.service.ReviewService;
 
 import java.util.List;
 
@@ -18,6 +21,7 @@ import java.util.List;
 public class ProductController
 {
     private final ProductService productService;
+    private final ReviewService reviewService;
 
     @PostMapping
     public ResponseEntity<ApiResponse<Product>> addProduct(
@@ -61,5 +65,37 @@ public class ProductController
     public ResponseEntity<ApiResponse<?>> delete(@PathVariable Long id)
     {
         return productService.delete(id);
+    }
+
+    //-----------------Review----------------
+
+    @PostMapping("/review")
+    public ResponseEntity<ApiResponse<Review>> addReview(
+            @RequestParam(value = "json") String json,
+            @RequestParam(value = "product-id") Long productId,
+            @RequestParam(value = "doctor-photo") MultipartFile docPhoto)
+    {
+        return reviewService.add(json, productId, docPhoto);
+    }
+
+    @GetMapping("/review")
+    public ResponseEntity<ApiResponse<List<ReviewDTO>>> allReview(
+            @RequestHeader(value = "Accept-Language") String lang,
+            @RequestParam(value = "product-id") Long productId)
+    {
+        return reviewService.get(lang, productId);
+    }
+
+    @PutMapping("/review")
+    public ResponseEntity<ApiResponse<Review>> update(
+            @RequestBody Review review)
+    {
+        return reviewService.update(review);
+    }
+
+    @DeleteMapping("/review/{id}")
+    public ResponseEntity<ApiResponse<?>> deleteReview(@PathVariable Long id)
+    {
+        return reviewService.delete(id);
     }
 }
