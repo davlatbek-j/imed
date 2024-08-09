@@ -1,5 +1,6 @@
 package uz.imed.payload;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,6 +25,8 @@ public class ProductMainDataDTO
     String shortDescription;
 
     //    List<String> tag;
+
+    @JsonProperty(value = "new")
     Boolean aNew;
 
     Boolean sale;

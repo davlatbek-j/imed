@@ -5,7 +5,9 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import uz.imed.entity.MyFile;
 import uz.imed.entity.Product;
+import uz.imed.entity.Video;
 import uz.imed.exception.LanguageNotSupportException;
 
 import javax.validation.constraints.DecimalMin;
@@ -27,6 +29,7 @@ public class ProductDTO
 
 //    List<String> tag;
 
+    @JsonProperty(value = "new")
     Boolean aNew;
 
     Boolean sale;
@@ -57,6 +60,10 @@ public class ProductDTO
 
     List<PhotoDTO> gallery;
 
+    List<MyFile> files;
+
+    List<Video> videos;
+
     Boolean active;
 
     Boolean popular;
@@ -67,24 +74,47 @@ public class ProductDTO
             return;
 
         this.id = entity.getId();
+
         this.name = entity.getName();
+
         this.slug = entity.getSlug();
+
         this.descriptions = new ArrayList<>();
+
         this.aNew = entity.getANew();
+
         this.sale = entity.getSale();
+
         entity.getDescriptions().forEach(i -> descriptions.add(new DescriptionDTO(i, lang)));
+
         this.discount = entity.getDiscount();
+
         this.originalPrice = entity.getOriginalPrice();
+
         this.partner = new PartnerLogoNameDTO(entity.getPartner());
+
 //        this.catalog = new CatalogDTO(entity.getCatalog(), lang);
+
 //        this.category = new CategoryDTO(entity.getCategory(), lang);
+
         this.characteristics = new ArrayList<CharacteristicDTO>();
+
         entity.getCharacteristics().forEach(i -> this.characteristics.add(new CharacteristicDTO(i, lang)));
+
         this.reviews = new ArrayList<>();
+
         entity.getReviews().forEach(i -> this.reviews.add(new ReviewDTO(i, lang)));
+
         this.gallery = new ArrayList<>();
+
         entity.getGallery().forEach(i -> this.gallery.add(new PhotoDTO(i)));
+
+        this.files = entity.getFiles();
+
+        this.videos = entity.getVideos();
+
         this.active = entity.getActive();
+
         this.popular = entity.getPopular();
 
         switch (lang.toLowerCase())

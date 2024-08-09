@@ -3,6 +3,8 @@ package uz.imed.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -201,10 +203,10 @@ public class ReviewService
         return ResponseEntity.ok(response);
     }
 
-    public ResponseEntity<ApiResponse<?>> get(String lang, Long productId)
+    public ResponseEntity<ApiResponse<?>> get(String lang, Long productId, int page, int size)
     {
-        List<Review> all = reviewRepo.findAllByProductId(productId);
-
+        Pageable pageable = PageRequest.of(page - 1, size);
+        List<Review> all = reviewRepo.findAllByProductId(productId, pageable);
         if (lang != null)
         {
             ApiResponse<List<ReviewDTO>> response = new ApiResponse<>();

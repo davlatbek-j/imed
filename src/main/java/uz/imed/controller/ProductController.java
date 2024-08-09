@@ -1,6 +1,10 @@
 package uz.imed.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -8,9 +12,14 @@ import org.springframework.web.multipart.MultipartFile;
 import uz.imed.entity.Product;
 import uz.imed.entity.Review;
 import uz.imed.payload.ApiResponse;
+import uz.imed.service.FileService;
 import uz.imed.service.ProductService;
 import uz.imed.service.ReviewService;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -21,6 +30,7 @@ public class ProductController
 {
     private final ProductService productService;
     private final ReviewService reviewService;
+    private final FileService fileService;
 
     @PostMapping
     public ResponseEntity<ApiResponse<Product>> addProduct(
@@ -80,9 +90,11 @@ public class ProductController
     @GetMapping("/review")
     public ResponseEntity<ApiResponse<?>> allReview(
             @RequestHeader(value = "Accept-Language", required = false) String lang,
-            @RequestParam(value = "product-id") Long productId)
+            @RequestParam(value = "product-id") Long productId,
+            @RequestParam(value = "page", defaultValue = "1", required = false) int page,
+            @RequestParam(value = "size", defaultValue = "2", required = false) int size)
     {
-        return reviewService.get(lang, productId);
+        return reviewService.get(lang, productId, page, size);
     }
 
     @PutMapping("/review")
@@ -97,4 +109,20 @@ public class ProductController
     {
         return reviewService.delete(id);
     }
+
+    //------------File upload--------
+    @PostMapping("/file")
+    public ResponseEntity<ApiResponse<?>> uploadFile(
+            @RequestParam(value = "files") List<MultipartFile> files,
+            @RequestParam(value = "product-id") Long productId)
+    {
+        return fileService.upload(productId, files);
+    }
+
+    @GetMapping("/file/{fileName}")
+    public ResponseEntity<Resource> download(@PathVariable String fileName)
+    {
+        return fileService.download(fileName);
+    }
+
 }

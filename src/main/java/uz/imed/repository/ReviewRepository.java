@@ -1,5 +1,6 @@
 package uz.imed.repository;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,5 +15,5 @@ public interface ReviewRepository extends JpaRepository<Review, Long>
     @Modifying
     void deleteById(Long id);
 
-    List<Review> findAllByProductId(Long productId);
+    List<Review> findAllByProductId(Long productId, Pageable pageable);
 }

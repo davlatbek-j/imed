@@ -68,7 +68,7 @@ public class Product
     Partner partner;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     Catalog catalog;
 
     @ManyToOne
@@ -84,6 +84,12 @@ public class Product
     @OneToMany
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     List<Photo> gallery;
+
+    @OneToMany(orphanRemoval = true, mappedBy = "product")
+    List<MyFile> files;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "product", fetch = FetchType.EAGER)
+    List<Video> videos;
 
     Boolean active;
 

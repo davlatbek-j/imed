@@ -21,8 +21,6 @@ public interface EventRepository extends JpaRepository<Event, Long> {
 
     Optional<Event> findBySlug(String slug);
 
-    List<Event> findAllByAddressEnContainingIgnoreCaseOrAddressRuContainingIgnoreCaseOrAddressUzContainingIgnoreCase(String addressEn, String addressRu, String addressUz);
-
     @Query(value = "SELECT * FROM event WHERE LOWER(address_uz)=LOWER(:address) OR LOWER(address_ru)=LOWER(:address) OR LOWER(address_en)=LOWER(:address)",nativeQuery = true)
     List<Event> findAllByAddress(@Param(value = "address") String address);
 

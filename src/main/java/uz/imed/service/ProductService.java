@@ -32,6 +32,8 @@ public class ProductService
     private final ReviewOptionRepository reviewOptionRepo;
     private final ReviewRepository reviewRepo;
     private final CharacteristicRepository characteristicRepo;
+    private final FileService fileService;
+    private final VideoRepository videoRepo;
 
     public ResponseEntity<ApiResponse<Product>> add(String json, List<MultipartFile> gallery, List<MultipartFile> reviewDoctorsPhoto)
     {
@@ -82,6 +84,9 @@ public class ProductService
                     product.getReviews().get(i).setDoctorPhoto(photoService.save(reviewDoctorsPhoto.get(i)));
 
             }
+
+            if (product.getVideos() != null && !product.getVideos().isEmpty())
+                product.getVideos().forEach(i -> i.setProduct(product));
 
             product.setGallery(new ArrayList<>());
             gallery.forEach(i -> product.getGallery().add(photoService.save(i)));
@@ -527,6 +532,67 @@ public class ProductService
             }
 
         }*/
+
+        //--------------File--------------
+        if (newProduct.getFiles() != null && !newProduct.getFiles().isEmpty())
+        {
+            List<MyFile> dbFiles = fromDB.getFiles();
+            List<MyFile> newFiles = newProduct.getFiles();
+            if (dbFiles == null)
+                dbFiles = new ArrayList<>();
+
+            for (MyFile newFile : newFiles)
+            {
+                for (MyFile dbFile : dbFiles)
+                {
+                    if (newFile.getId() != null && newFile.getId().equals(dbFile.getId()) && newFile.getName() == null)
+                    {
+                        fileService.delete(newFile.getId());
+                    }
+                }
+
+            }
+        }
+
+        //--------------Video--------------
+        if (newProduct.getVideos() != null && !newProduct.getVideos().isEmpty())
+        {
+            List<Video> dbVideos = fromDB.getVideos();
+            List<Video> newVideos = newProduct.getVideos();
+            if (dbVideos == null)
+                dbVideos = new ArrayList<>();
+
+            for (Video newVideo : newVideos)
+            {
+                if (newVideo.getId() != null)
+                {
+                    for (Video dbVideo : dbVideos)
+                    {
+                        if (newVideo.getId().equals(dbVideo.getId()))
+                        {
+                            if (newVideo.getUrl() != null)
+                                dbVideo.setUrl(newVideo.getUrl());
+
+                            if (newVideo.getTitle() != null)
+                                dbVideo.setTitle(newVideo.getTitle());
+
+                            if (newVideo.getUrl() == null && newVideo.getTitle() == null)
+                            {
+                                dbVideos.removeIf(i -> i.getId().equals(dbVideo.getId()));
+                                videoRepo.delete(newVideo.getId());
+                            }
+                        }
+                    }
+                } else
+                {
+                    newVideo.setProduct(fromDB);
+                    dbVideos.add(newVideo);
+                }
+
+            }
+
+        }
+
 
         Product update = productRepo.save(fromDB);
 
